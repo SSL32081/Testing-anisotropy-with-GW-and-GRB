@@ -4,4 +4,3 @@
 *gz filter=lfs diff=lfs merge=lfs -text
 *npz filter=lfs diff=lfs merge=lfs -text
 *json filter=lfs diff=lfs merge=lfs -text
-tests/mapXmap_correlations/GW_combined_skymap.npy filter=lfs diff=lfs merge=lfs -text
