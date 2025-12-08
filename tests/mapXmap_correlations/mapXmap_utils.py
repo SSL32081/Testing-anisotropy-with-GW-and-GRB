@@ -158,7 +158,7 @@ def list_depth(lst):
 
 # plot Cl function; if more than one, pass lists for Cls, Cl_labels, and colors
 def plot_Cls(Cls, Cl_labels=None, colors = None, linestyles=None, lmax=None, title=None, monopole_term=True,
-             ylabel=None, ylog=True):
+             ylabel=None, ylog=True, xlog=False, save=False, save_ext=".png"):
     if lmax is None:
         if list_depth(Cls)>=1:
             lmax = len(Cls[0])
@@ -189,6 +189,11 @@ def plot_Cls(Cls, Cl_labels=None, colors = None, linestyles=None, lmax=None, tit
     plt.xlabel(r'Multipole $\ell$')
     plt.xticks(l_vals, minor=True)
     
+    if xlog is True:
+        plt.xscale('log')
+    else:
+        plt.xscale('linear')
+
     if ylabel is None:
         plt.ylabel(r'$C_\ell$')
     else:
@@ -205,12 +210,16 @@ def plot_Cls(Cls, Cl_labels=None, colors = None, linestyles=None, lmax=None, tit
         plt.title(r'Angular Power Spectrum $C_\ell$')
     plt.legend()
     plt.grid(True)
+
+    if save is True:
+        plt.savefig(str(title).replace(" ","") + save_ext, dpi=600, bbox_inches="tight")
+    
     plt.show()
 
 
 # plot Dl function; if more than one, pass lists for Cls, Cl_labels, and colors
 def plot_Dls(Cls, Cl_labels=None, colors=None, linestyles=None, lmax=None, title=None,
-             ylabel=None, ylog=True, sub=None):
+             ylabel=None, ylog=True, xlog=False, save=False, save_ext='.png'):
     if lmax is None:
         if list_depth(Cls)>=1:
             lmax = len(Cls[0])
@@ -235,6 +244,12 @@ def plot_Dls(Cls, Cl_labels=None, colors=None, linestyles=None, lmax=None, title
         plt.plot(l_vals, Cls*l_vals*(l_vals+1)/(2*np.pi), label=Cl_labels, color=colors, linestyle=linestyles)
     plt.xlabel(r'Multipole $\ell$')
     plt.xticks(l_vals, minor=True)
+
+    if xlog is True:
+        plt.xscale('log')
+    else:
+        plt.xscale('linear')
+
     if ylabel is None:
         plt.ylabel(r'$D_\ell = C_\ell \ell (\ell + 1)/ 2\pi$')
     else:
@@ -251,11 +266,16 @@ def plot_Dls(Cls, Cl_labels=None, colors=None, linestyles=None, lmax=None, title
         plt.title(r'Angular Power Spectrum $D_\ell$')
     plt.legend()
     plt.grid(True)
+
+    if save is True:
+        plt.savefig(str(title).replace(" ","") + save_ext, dpi=600, bbox_inches="tight")
+
     plt.show()
 
 
 # plot angular correlation function C(theta)
-def plot_corr_func(Cls, Cl_labels=None, colors=None, linestyles=None, title=None, ylabel=None, ylog=False):
+def plot_corr_func(Cls, Cl_labels=None, colors=None, linestyles=None, title=None, ylabel=None,
+                   ylog=False, xlog=False, save=False, save_ext='.png'):
     theta_vals = np.linspace(0, 180, 180)
 
     plt.figure(figsize=(8, 5))
@@ -273,6 +293,12 @@ def plot_corr_func(Cls, Cl_labels=None, colors=None, linestyles=None, title=None
         plt.plot(theta_vals, corr_func(np.radians(theta_vals), Cls),
                  label=Cl_labels, color=colors, linestyle=linestyles)
     plt.xlabel(r'$\theta$ [deg]')
+    
+    if xlog is True:
+        plt.xscale('log')
+    else:
+        plt.xscale('linear')
+    
     if ylabel is None:
         plt.ylabel(r'Correlation, $C(\theta)$')
     else:
@@ -290,6 +316,10 @@ def plot_corr_func(Cls, Cl_labels=None, colors=None, linestyles=None, title=None
 
     plt.legend()
     plt.grid(True)
+
+    if save is True:
+        plt.savefig(str(title).replace(" ","") + save_ext, dpi=600, bbox_inches="tight")
+
     plt.show()
 
 
