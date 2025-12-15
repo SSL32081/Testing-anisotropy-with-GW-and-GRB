@@ -326,7 +326,14 @@ def plot_corr_func(Cls, Cl_labels=None, colors=None, linestyles=None, title=None
 # save skymap to .npy file
 def save_skymap_npy(skymap, filename=None):
     if filename is None:
-        filename = str(skymap) + '.png'
+        filename = str(skymap) + '.npy'
+    plt.savefig(filename,
+                dpi=600, bbox_inches="tight", facecolor="white")
+    
+# save skymap to .npy file
+def save_plot_local(plot, filename=None):
+    if filename is None:
+        filename = str(plot) + '.png'
     plt.savefig(filename,
                 dpi=600, bbox_inches="tight", facecolor="white")
 
