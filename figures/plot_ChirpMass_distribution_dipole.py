@@ -1,77 +1,70 @@
 import pandas as pd
 import numpy as np
-from scipy import stats
 import matplotlib.pyplot as plt
 import seaborn as sns
-import scienceplots
+from scipy.stats import chi2 
+import scienceplots 
 
-THETA_DIPOLE_DEG = 90.0 - (-6.944)
-PHI_DIPOLE_DEG = 167.942
-THETA_DIPOLE_RAD = np.deg2rad(THETA_DIPOLE_DEG)
-PHI_DIPOLE_RAD = np.deg2rad(PHI_DIPOLE_DEG)
+def load_data(file_path):
+    df = pd.read_csv(file_path, sep='\t')
+    df.columns = df.columns.str.strip().str.replace('#', '')
+    
+    rename_map = {
+        'event_name': 'name',
+        'chirp_mass_source[Msun]': 'M_value',
+        'theta[rad]': 'theta',
+        'phi[rad]': 'phi'
+    }
+    df = df.rename(columns=rename_map)
+    df[['M_value', 'theta', 'phi']] = df[['M_value', 'theta', 'phi']].apply(pd.to_numeric, errors='coerce')
+    return df.drop_duplicates(subset='name').dropna(subset=['M_value', 'theta', 'phi'])
 
-# load data
-df = pd.read_csv("gw_location_data.txt", sep='\t')
-df.columns = df.columns.str.strip()
-if df.columns[0].startswith('#'):
-    df.rename(columns={df.columns[0]: df.columns[0].lstrip('#')}, inplace=True)
+def assign_hemispheres(df, theta_d, phi_d):
+    cos_gamma = (np.cos(theta_d) * np.cos(df['theta']) + 
+                 np.sin(theta_d) * np.sin(df['theta']) * np.cos(df['phi'] - phi_d))
+    
+    df['hemisphere'] = np.where(cos_gamma > 0, 'Forward', 'Backward')
+    counts = df['hemisphere'].value_counts()
+    label_map = {
+        'Forward': f'Forward hemisphere ($N^F={counts.get("Forward", 0)}$)',
+        'Backward': f'Backward hemisphere ($N^B={counts.get("Backward", 0)}$)'
+    }
+    df['hemisphere_label'] = df['hemisphere'].map(label_map)
+    return df
 
-df.rename(columns={
-    'event_name': 'name',
-    'chirp_mass_source[Msun]': 'M_value',
-    'luminosity_distance[Mpc]': 'd_L',
-    'theta[rad]': 'theta',
-    'phi[rad]': 'phi'
-}, inplace=True)
+def get_poisson_err(counts, alpha=0.10):
+    low = np.where(counts > 0, 0.5 * chi2.ppf(alpha / 2, 2 * counts), 0)
+    high = 0.5 * chi2.ppf(1 - alpha / 2, 2 * (counts + 1))
+    err = np.array([counts - low, high - counts])
+    return np.where(counts > 0, err, np.nan)
 
-for col in ['M_value', 'd_L', 'theta', 'phi']:
-    df[col] = pd.to_numeric(df[col], errors='coerce')
+def plot_hist(df, output_file):
+    plt.style.use(['science', 'ieee', 'bright'])
+    fig, ax = plt.subplots(figsize=(6, 4.5))
+    m_vals = df['M_value']
+    bins = np.arange(np.floor(m_vals.min()/5)*5, np.ceil(m_vals.max()/5)*5 + 5.001, 5)
+    
+    sns.histplot(data=df, x='M_value', hue='hemisphere_label', bins=bins, 
+                 multiple='stack', ax=ax, legend=True)
 
-df.drop_duplicates(subset='name', keep='first', inplace=True)
-df_clean = df.dropna(subset=['M_value', 'theta', 'phi']).copy()
-
-# calcuate dipole hemisphere
-cos_gamma = (
-    np.cos(THETA_DIPOLE_RAD) * np.cos(df_clean['theta']) +
-    np.sin(THETA_DIPOLE_RAD) * np.sin(df_clean['theta']) * np.cos(df_clean['phi'] - PHI_DIPOLE_RAD)
-)
-df_clean['hemisphere_short'] = np.where(cos_gamma > 0, 'Forward', 'Backward')
-
-N_forward = len(df_clean[df_clean['hemisphere_short'] == 'Forward'])
-N_backward = len(df_clean[df_clean['hemisphere_short'] == 'Backward'])
-
-forward_label = f'Forward hemisphere (N={N_forward})'
-backward_label = f'Backward hemisphere (N={N_backward})'
-
-# for label
-df_clean['hemisphere_label'] = df_clean['hemisphere_short'].map({
-    'Forward': forward_label,
-    'Backward': backward_label
-})
-
-M_min = df_clean['M_value'].min()
-M_max = df_clean['M_value'].max()
-BIN_WIDTH = 5.0
-bin_start = np.floor(M_min / BIN_WIDTH) * BIN_WIDTH
-bin_end = np.ceil(M_max / BIN_WIDTH) * BIN_WIDTH
-bins = np.arange(bin_start, bin_end + 1e-6, BIN_WIDTH)
-
-# plot histogram
-plt.style.use(['science','ieee', 'bright'])
-
-sns.histplot(
-    data=df_clean,
-    x='M_value',
-    hue='hemisphere_label', 
-    bins=bins,
-    stat='count',
-    multiple='stack',
-    kde=False,
-)
-
-plt.xlabel(r'Source Frame Chirp Mass $[M_{\odot}]$')
-plt.ylabel('Number Counts')
-plt.title(r'Dipole Axis ($\theta_D=$'+f'${THETA_DIPOLE_DEG:.1f}^\circ$, $\phi_D={PHI_DIPOLE_DEG:.1f}^\circ$)')
-
-plt.tight_layout()
-plt.savefig("chirpmass_dipole_hist.pdf", dpi=300)
+    f_counts, edges = np.histogram(df[df['hemisphere'] == 'Forward']['M_value'], bins=bins)
+    b_counts, _ = np.histogram(df[df['hemisphere'] == 'Backward']['M_value'], bins=bins)
+    centers = (edges[:-1] + edges[1:]) / 2
+    ax.errorbar(centers, b_counts, yerr=get_poisson_err(b_counts), 
+                fmt='none', capsize=3, color='C1', zorder=10)
+    ax.errorbar(centers, f_counts + b_counts, yerr=get_poisson_err(f_counts), 
+                fmt='none', capsize=3, color='C0', zorder=10)
+    ax.set(xlabel=r'Source Frame Chirp Mass $[M_{\odot}]$', ylabel='Number Counts',
+           title=r'Dipole Axis (RA=167.9$^\circ$, DEC=-6.9$^\circ$)')
+    
+    fig.tight_layout()
+    fig.savefig(output_file, dpi=300)
+    return 
+ 
+if __name__ == "__main__":
+    RA_D, DEC_D = 167.942, -6.944
+    THETA_D, PHI_D = np.deg2rad(90.0 - DEC_D), np.deg2rad(RA_D)
+    
+    df_clean = load_data("gw_location_data.txt")
+    data = assign_hemispheres(df_clean, THETA_D, PHI_D)
+    plot_hist(data, "chirpmass_dipole_hist.pdf")
