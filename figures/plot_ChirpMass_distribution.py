@@ -3,6 +3,7 @@ import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
 import seaborn as sns
+plt.style.use('../matplotlibrc')
 
 df = pd.read_csv("gw_location_data.txt", sep='\t')
 
@@ -47,32 +48,34 @@ print("K-S test:")
 print("max abs diff = ", ks_statistic)
 print("p value = ", p_value)
 
-plt.figure(figsize=(8, 6))
-north_label = f'North Hemisphere (N={N_north})'
-south_label = f'South Hemisphere (N={N_south})'
+ns_label_colour = {
+    'North': ('blue', f'North Hemisphere (N={N_north})'),
+    'South': ('red', f'South Hemisphere (N={N_south})'),
+}
 
-def custom_kde_plot(data, x, hue, **kwargs):
-    
-    color_map = {'North': 'blue', 'South': 'red'} 
+
+def custom_kde_plot(data, x, hue, ax=plt.cla(), **kwargs):
+
     for name, group in data.groupby(hue):
-        label = north_label if name == 'North' else south_label
-        current_color = color_map.get(name, 'gray') 
-        
-        sns.kdeplot(data=group, x=x, 
-            label=label, color=current_color, 
-            fill=True, linewidth=2, 
-            alpha=0.5, **{k: v for k, v in kwargs.items() if k != 'palette'})
+        label = ns_label_colour.get(name, '')
+        current_color = ns_label_colour.get(name, 'gray')
 
-custom_kde_plot(data=df_clean, x='M_value', hue='hemisphere',
+        sns.kdeplot(data=group, x=x,
+                    label=label, color=current_color,
+                    fill=True, linewidth=2,
+                    alpha=0.5, ax=ax, **kwargs)
+
+
+fig, ax = plt.subplots(1, 1, constrained_layout=True)
+custom_kde_plot(data=df_clean, x='M_value', ax=ax, hue='hemisphere',
                 palette={'North': 'blue', 'South': 'red'}, bw_adjust=0.5)
 
+linekws = dict(color='blue', linestyle=':', alpha=0.9, linewidth=1.5)
+ax.axvline(median_north, label=fr'NH Median: ${median_north:.1f}\,M_\odot$', **linekws)
+ax.axvline(median_south, label=fr'SH Median: ${median_south:.1f}\,M_\odot$', **linekws)
 
-plt.axvline(median_north, color='blue', linestyle=':', alpha=0.9, linewidth=1.5, label=f'NH Median: ${median_north:.1f}$ $M_{{\\odot}}$')
-plt.axvline(median_south, color='red', linestyle=':', alpha=0.9, linewidth=1.5, label=f'SH Median: ${median_south:.1f}$ $M_{{\\odot}}$')
+ax.set_xlabel(r'Source Frame Chirp Mass $[M_{\odot}]$', fontsize=12)
+ax.set_ylabel('Observed Density', fontsize=12)
+ax.legend(loc='upper right')
 
-plt.xlabel(r'Source Frame Chirp Mass $[M_{\odot}]$', fontsize=12)
-plt.ylabel('Observed Density', fontsize=12)
-plt.legend(loc='upper right')
-plt.tight_layout()
-
-plt.savefig("chirpmass_dis.png", dpi=300)
+fig.savefig("chirpmass_dis.png", dpi=300)
