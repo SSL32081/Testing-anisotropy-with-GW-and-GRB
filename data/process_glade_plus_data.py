@@ -8,13 +8,13 @@ DATA_DIR = Path("../data/")
 print('Reading GLADE+ data...')
 keys = ('ra', 'dec', 'd_L', 'z_cmb')
 dtypes = [(key, 'f8') for key in keys]
-glade_arr = np.genfromtxt(DATA_DIR / 'GLADE_plus_subset_new.txt', dtype=dtypes,
+glade_arr = np.genfromtxt(DATA_DIR / 'GLADE_plus_subset.txt', dtype=dtypes,
               missing_values=('None', 'null'), filling_values=np.nan)
 
 # Pre-process data, remove NaNs
 mask = ~(
-    np.isnan(glade_arr['ra']) | 
-    np.isnan(glade_arr['dec']) | 
+    np.isnan(glade_arr['ra']) |
+    np.isnan(glade_arr['dec']) |
     np.isnan(glade_arr['z_cmb'])
 )
 masked_data = glade_arr[mask]
