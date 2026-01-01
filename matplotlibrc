@@ -1,9 +1,9 @@
-xtick.labelsize: 9.3
-ytick.labelsize: 9.3
-legend.fontsize: 9
+xtick.labelsize: 8.3
+ytick.labelsize: 8.3
+legend.fontsize: 8
 legend.handlelength: 2
-axes.titlesize:  10.3
-axes.labelsize:  10
+axes.titlesize:  9.3
+axes.labelsize:  9
 
 figure.figsize :  3.85, 2.849
 
@@ -20,4 +20,4 @@ font.serif:       Computer Modern Roman
 font.monospace:   Computer Modern Typewriter
 mathtext.fontset: stix
 text.latex.preamble: \usepackage{amsmath}
-font.size:        10.0
+font.size:        8.0

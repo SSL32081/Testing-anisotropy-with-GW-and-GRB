@@ -21,6 +21,8 @@ def read_grb_data(file_path):
     # Pre-process data
     mask = np.ones_like(arr, dtype=bool)
     for key in keys:
+        if key == 'redshift':
+            continue
         mask &= np.isfinite(arr[key]) & (arr[key] != -999)
     arr = arr[mask]
 
@@ -44,23 +46,23 @@ def read_grb_simulated_data(file_path):
 
 def plot_grb_skymap(grb_data, ax=plt.gca(), fig=plt.gcf()):
     # Separate long and short GRBs
-    short_mask = grb_data['duration'] >= 2.0
+    short_mask = grb_data['duration'] < 2.0
     long_mask = grb_data['duration'] >= 2.0
     short_grbs = grb_data[short_mask]
     long_grbs = grb_data[long_mask]
     
     log_norm = LogNorm(vmin=2, vmax=350)
     sc = ax.scatter(long_grbs['ra'], long_grbs['dec'], 
-                      c=long_grbs['duration'], s=10, marker="o",
+                      c=long_grbs['duration'], s=2, marker="o",
                       cmap="winter", norm=log_norm, alpha=0.9,
                       edgecolors="none", label="Long GRBs", 
                       rasterized=True)
     ax.scatter(short_grbs['ra'], short_grbs['dec'], 
-                 s=18, c='red', marker="+",
-                 linewidths=1.1, alpha=0.9,
+                 s=5, c='red', marker="+",
+                 linewidths=0.7, alpha=0.9,
                  label="Short GRBs", rasterized=True)
 
-    fig.colorbar(sc, ax=ax, pad=0.05, shrink=0.7, 
+    fig.colorbar(sc, ax=ax, pad=0.04, shrink=0.65, 
                  orientation="vertical", 
                  label="Long GRB Burst Duration (s)")
 
@@ -69,14 +71,14 @@ def plot_grb_skymap(grb_data, ax=plt.gca(), fig=plt.gcf()):
     ax.grid(True, linestyle="-", linewidth=1, alpha=0.5)
     ax.set_xticks(np.radians(np.linspace(-180, 180, 13)))  # Fewer longitude lines
     ax.set_yticks(np.radians(np.linspace(-90, 90, 7)))    # Fewer latitude lines
-    ax.axhline(y=0, linewidth=0.8, linestyle="-", alpha=0.5)  # Equator
-    ax.axvline(x=0, linewidth=0.8, linestyle="-", alpha=0.5)  # Prime meridian
+    line_kws = dict(color='k', linewidth=0.8, linestyle="-", alpha=0.5)
+    ax.axhline(y=0, **line_kws)  # Equator
+    ax.axvline(x=0, **line_kws)  # Prime meridian
 
-    ax.set_title("GRB Skymap", pad=16, fontsize=14)
-    ax.legend(loc='lower left', bbox_to_anchor=(0.68, -0.07),
-              ncol=2, fancybox=False)
+    ax.set_title("GRB Skymap")
+    ax.legend(loc='lower center', bbox_to_anchor=(0.5, -0.17),
+              ncol=2, fancybox=False, frameon=False)
     return fig, ax
-
 
 
 def main():
@@ -86,13 +88,15 @@ def main():
     # GRB locations
     grb_data = read_grb_data(DATA_DIR / "GRB_Summary_table.txt")
     sim_grb_data = read_grb_simulated_data(DATA_DIR / "simulated_grbs.txt")
+    # Galaxies catalogue from GLADE+
+    
 
-    fig, axes = plt.subplots(3, 1, figsize=(4, 8), 
-                             constrained_layout=True, subplot_kw={'projection': 'mollweide'})
+    fig, axes = plt.subplots(3, 1, figsize=(4, 6.5), 
+                             subplot_kw={'projection': 'mollweide'})
 
     plot_grb_skymap(grb_data, ax=axes[1], fig=fig)
 
-    fig.savefig(FIG_DIR / 'Fig1_observed_data.png', dpi=300)
+    fig.savefig(FIG_DIR / 'Fig1_observed_data.pdf', dpi=300)
 
 
 if __name__ == "__main__":
