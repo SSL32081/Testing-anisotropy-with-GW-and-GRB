@@ -2,7 +2,6 @@
 from pathlib import Path
 from copy import deepcopy
 import numpy as np
-import pandas as pd
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 import healpy as hp
@@ -12,21 +11,27 @@ plt.style.use('../matplotlibrc')
 FIG_DIR = Path("../figures/")
 DATA_DIR = Path("../data/")
 
-## GW skyamps
-def plot_gw_skymap(skymaps, ax=plt.gca(), fig=plt.gcf()):
-    # Hardcode number of events here, since the read-in data has lost that info
-    N_events = 85
-    # Set current active figure and axis
-    plt.figure(fig.number)
-    left, bottom, right, top = np.array(ax.get_position()).ravel()
+
+def add_healpy_mollweide_ax(fig, ax):
+    # This is to mimic the healpy.mollview function behaviour
+    # Replcae the original axis with a healpy axis
+    left, bottom, right, top = ax.get_position().extents
     extent = (left, bottom, right - left, top - bottom)
     fig.delaxes(ax)
     ax = hp.projaxes.HpxMollweideAxes(
             fig, extent, coord='G', flipconv='astro'
         )
     fig.add_axes(ax)
+    return ax
+
+
+## GW skyamps
+def plot_gw_skymap(skymaps, ax=plt.gca(), fig=plt.gcf()):
+    # Hardcode number of events here, since the read-in data has lost that info
+    N_events = 85
     cmap = 'viridis'
 
+    ax = add_healpy_mollweide_ax(fig, ax)
     ax.projmap(
             skymaps, nest=False,
             xsize=2600, coord='G',
@@ -130,19 +135,11 @@ def plot_glade_skymap(glade_data, ax=plt.gca(), fig=plt.gcf()):
 
     # # We want counts here
     # galaxy_map = galaxy_map / np.sum(galaxy_map)
-    # Set current active figure and axis
-    plt.figure(fig.number)
-    left, bottom, right, top = np.array(ax.get_position()).ravel()
-    extent = (left, bottom, right - left, top - bottom)
-    fig.delaxes(ax)
-    ax = hp.projaxes.HpxMollweideAxes(
-            fig, extent, coord='G', flipconv='astro'
-        )
-    fig.add_axes(ax)
     vmin = galaxy_map[galaxy_map > 0].min()
     vmax = galaxy_map.max()
     cmap = 'plasma'
 
+    ax = add_healpy_mollweide_ax(fig, ax)
     ax.projmap(
             galaxy_map, nest=False,
             xsize=1000, coord='G',
@@ -182,7 +179,6 @@ def relocate_healpy_axes(ax, cb_ax, ref_ax_pos, ref_cb_ax_pos, shift):
 
 
 def main():
-
     # Observed GW skyloc maps
     observed_map = np.load(DATA_DIR / 'GWTC-4_mixed_combined_skymap.npy')
     # GRB locations
@@ -212,6 +208,8 @@ def main():
         ax_poss[0], ax_poss[3], shift=0.04
     )
 
+    # Cannot shift the top row axes up, as it will squeeze against the top
+    # Shift all the lower axes instead.
     for idx, ax in enumerate(fig.axes):
         if idx not in (1, 2):
             new_pos = deepcopy(ax.get_position())

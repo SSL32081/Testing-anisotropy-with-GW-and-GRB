@@ -8,5 +8,5 @@ echo "We are only downloading a subset of the whole dataset (columns 6-12: RA, D
 
 # Download and process the GLADE+ catalog
 wget -qO- http://elysium.elte.hu/~dalyag/GLADE+.txt | \
-# awk '{print $6, $7, $8, $9, $10, $11}' OFS='\t' > GLADE_plus_subset.txt
 awk '{print $9, $10, $33, $29}' OFS='\t' > GLADE_plus_subset.txt
+# awk '{print $6, $7, $8, $9, $10, $11}' OFS='\t' > GLADE_plus_subset.txt
