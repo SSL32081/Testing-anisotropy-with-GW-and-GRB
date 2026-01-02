@@ -4,6 +4,9 @@ from pathlib import Path
 import requests
 import shutil
 import tarfile
+import numpy as np
+import healpy as hp
+from ligo.skymap.io import read_sky_map
 
 def https_download(url, dest_path: Path):
     with requests.get(url, stream=True) as req:
@@ -12,6 +15,38 @@ def https_download(url, dest_path: Path):
             # Copy the response content to the file object in chunks
             shutil.copyfileobj(req.raw, f)
     print(f"Successfully Downloaded to: {dest_path}")
+
+
+def rotate_skymap_to_galactic(skymap, save=False, output_path=None):
+    nside = hp.get_nside(skymap)
+    ordering = 'nested' if header.get('ORDERING') == 'NESTED' else 'ring'
+    # If not in RING ordering, convert to RING for rotation
+    if ordering == 'nested':
+        skymap = hp.reorder(skymap, n2r=True)  # NESTED to RING
+
+    # Convert to spherical harmonics
+    lmax = 3 * nside - 1  # Standard choice
+    alm = hp.map2alm(skymap, lmax=lmax)
+    
+    # Create rotator and rotate alms
+    r = hp.Rotator(coord=['C', 'G'])
+    alm_rotated = r.rotate_alm(alm)
+
+    # Convert back to map
+    skymap_gal = hp.alm2map(alm_rotated, nside=nside, verbose=False)
+    # Convert back to original
+    if ordering == 'nested':
+        skymap_gal = hp.reorder(skymap_gal, r2n=True)  # RING to NESTED
+    # Normalize
+    skymap_gal = skymap_gal / np.sum(skymap_gal)
+    
+    if save:
+        # Save to new file
+        hp.write_map(output_path, skymap_gal,
+                    coord='G',
+                    nest=(ordering == 'nested'),
+                    )
+    return skymap_gal
 
 
 PARENT_DIR = Path(os.environ.get('HANDON_REPO', './')) / 'LVK_skyloc_samples'
@@ -28,7 +63,7 @@ skymaps_GWTC4p0 = f"https://zenodo.org/records/{GWTC4p0_Zenodo}/files/IGWN-GWTC4
 GWTC4p0_tarfile = "GWTC4p0_skymaps.tar.gz"
 ### Synthetic O4a
 synth_o4a_urls = "https://gw.phy.cuhk.edu.hk/static/O4a_simulated_skymaps/{tar_file}".format
-synth_o4a_zenodo = "https://zenodo.org/records/{}/files/".format()
+synth_o4a_zenodo = "https://zenodo.org/records/{}/files/".format("")
 synth_o4a_tarfile = "O4a_H1L1_synthetic_skymaps.tar.gz"
 
 # 1. Check if the FITS files are available in the local directory
@@ -49,6 +84,8 @@ if len(list(GWTC4_FITS_DIR.glob("*.fits.gz"))) != 370:
     # Remove the tar.gz file and extracted folders
     (PARENT_DIR / GWTC4p0_tarfile).unlink()
     shutil.rmtree(GWTC4_FITS_DIR / 'parameter_estimation')
+else:
+    print("GWTC-4 skymap FITS files already exist. Skipping download.")
 
 ## Synthetic O4a skymaps
 USE_ZENODO = False
@@ -67,7 +104,7 @@ if len(list(SYN_O4A_FITS_DIR.glob("*.fits.gz"))) != 1000:
         (PARENT_DIR / synth_o4a_tarfile).unlink()
     else:
         ### B. Old files: 10 sets
-        for start_idx in range(0, 1001, 100):
+        for start_idx in range(0, 1000, 100):
             end_idx = start_idx + 99
             tar_file = f"H1L1_sets_{start_idx:d}_{end_idx:d}.tar.gz"
 
@@ -77,8 +114,49 @@ if len(list(SYN_O4A_FITS_DIR.glob("*.fits.gz"))) != 1000:
             with tarfile.open(PARENT_DIR / tar_file, mode='r:gz') as tar:
                 # Extract the files into the SYN_O4A_FITS_DIR
                 tar.extractall(path=SYN_O4A_FITS_DIR)
+            for fits_file in (SYN_O4A_FITS_DIR / "H1L1/sets_{start_idx:d}_{end_idx:d}").glob("*.fits.gz"):
+                fits_file.rename(SYN_O4A_FITS_DIR / fits_file.name)
             # Remove the tar.gz file
             (PARENT_DIR / tar_file).unlink()
+        shutil.rmtree(SYN_O4A_FITS_DIR / 'H1L1')
+else:
+    print("Synthetic O4a skymap FITS files already exist. Skipping download.")
+
+print('All skymap FITS files are ready!')
+
+# 2. Process GWTC-4 skymap fits
+NSIDE = 256
+NPIX = hp.nside2npix(NSIDE)
+resultant_map = np.zeros(NPIX)
+
+for fits_file in GWTC4_FITS_DIR.glob("*Mixed_*fits.gz"):
+    skymap, header = read_sky_map(fits_file, distances=False, moc=False)
+    filename = fits_file.name.split('.')[0]
+    output_path = fits_file.with_name(filename + "_galactic.fits.gz")
+    skymap_gal = rotate_skymap_to_galactic(skymap, save=True, output_path=output_path)
+
+    # Resample to common resolution(important with power=-2)
+    skymap_resized = hp.ud_grade(skymap_gal, NSIDE, power=-2)
+    # Add to combined map
+    resultant_map += skymap_resized / np.sum(skymap_resized)  # Normalize each map before adding, so that each contributes equally
+
+resultant_map = resultant_map / np.sum(resultant_map)  # Normalize combined map
+np.save("./GWTC4p0_combined_galactic_skymap.npy", resultant_map)
 
 
-# 2. 
+# 3. Process synthetic O4a skymap fits
+resultant_map = np.zeros(NPIX)
+
+for fits_file in SYN_O4A_FITS_DIR.glob("H1L1*fits.gz"):
+    skymap, header = read_sky_map(fits_file, distances=False, moc=False)
+    filename = fits_file.name.split('.')[0]
+    output_path = fits_file.with_name(filename + "_galactic.fits.gz")
+    skymap_gal = rotate_skymap_to_galactic(skymap, save=True, output_path=output_path)
+
+    # Resample to common resolution(important with power=-2)
+    skymap_resized = hp.ud_grade(skymap_gal, NSIDE, power=-2)
+    # Add to combined map
+    resultant_map += skymap_resized / np.sum(skymap_resized)  # Normalize each map before adding, so that each contributes equally
+
+resultant_map = resultant_map / np.sum(resultant_map)  # Normalize combined map
+np.save("./synthetic_O4a_combined_galactic_skymap.npy", resultant_map)
