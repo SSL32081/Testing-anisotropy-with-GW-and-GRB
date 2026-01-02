@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
-from pathlib import Path
-from copy import deepcopy
 import numpy as np
-from astropy.coordinates import SkyCoord
-import astropy.units as u
-import healpy as hp
 import matplotlib.pyplot as plt
+from utils import DATA_DIR, FIG_DIR, SINGLE, read_grb_data
+from copy import deepcopy
+import healpy as hp
 from matplotlib.colors import LogNorm, Normalize
-plt.style.use('../matplotlibrc')
-FIG_DIR = Path("../figures/")
-DATA_DIR = Path("../data/")
 
 
 def add_healpy_mollweide_ax(fig, ax):
@@ -52,38 +47,6 @@ def plot_gw_skymap(skymaps, ax=plt.gca(), fig=plt.gcf()):
 
 
 ## GRB 
-def read_grb_data(file_path):
-    # Load the data
-    keys = ('ra', 'dec', 'pos_err', 'duration', 'redshift')
-    dtypes = [(key, 'f8') for key in keys]
-    arr = np.loadtxt(file_path, dtype=dtypes, usecols=(3,4,5,6,11))
-
-    # Pre-process data
-    mask = np.ones_like(arr, dtype=bool)
-    for key in keys:
-        if key == 'redshift':
-            continue
-        mask &= np.isfinite(arr[key]) & (arr[key] != -999)
-    arr = arr[mask]
-
-    # Convert RA, Dec to radians for Mollweide projection
-    # SL: How is this different from just np.radians?
-    coords = SkyCoord(ra=arr['ra'] * u.deg, dec=arr['dec'] * u.deg, frame="icrs")
-    arr['ra'] = (360.0 * u.deg - coords.ra).wrap_at(180 * u.deg).radian
-    arr['dec'] = coords.dec.radian
-    return arr
-
-
-def read_grb_simulated_data(file_path):
-    with open(file_path) as f:
-        header = f.readlines()[0]
-        # Strip away the leading comment and closing newline character
-        keys = header[2:-2].split(' ')
-        dtypes = [(key, 'f8') for key in keys]
-    simulated_grbs = np.loadtxt(file_path, dtype=dtypes)
-    return simulated_grbs
-
-
 def plot_grb_skymap(grb_data, ax=plt.gca(), fig=plt.gcf()):
     # Separate long and short GRBs
     short_mask = grb_data['duration'] < 2.0
@@ -92,12 +55,12 @@ def plot_grb_skymap(grb_data, ax=plt.gca(), fig=plt.gcf()):
     long_grbs = grb_data[long_mask]
     
     log_norm = LogNorm(vmin=2, vmax=350)
-    sc = ax.scatter(long_grbs['ra'], long_grbs['dec'], 
+    sc = ax.scatter(long_grbs['l_gal'], long_grbs['b_gal'], 
                       c=long_grbs['duration'], s=2, marker="o",
                       cmap="winter", norm=log_norm, alpha=0.9,
                       edgecolors="none", label="Long GRBs", 
                       rasterized=True)
-    ax.scatter(short_grbs['ra'], short_grbs['dec'], 
+    ax.scatter(short_grbs['l_gal'], short_grbs['b_gal'], 
                  s=5, c='red', marker="+",
                  linewidths=0.7, alpha=0.9,
                  label="Short GRBs", rasterized=True)
@@ -121,6 +84,7 @@ def plot_grb_skymap(grb_data, ax=plt.gca(), fig=plt.gcf()):
     return fig, ax
 
 
+## GLADE+ galaxies
 def plot_glade_skymap(glade_data, ax=plt.gca(), fig=plt.gcf()):
     NSIDE = 256
     theta = np.pi / 2 - glade_data['b_gal']  # colatitude
@@ -186,7 +150,7 @@ def main():
     # Galaxies catalogue from GLADE+
     glade_data = np.load(DATA_DIR / 'GLADE_galactic_coords.npy')
 
-    fig, axes = plt.subplots(3, 1, figsize=(4, 6.4), 
+    fig, axes = plt.subplots(3, 1, figsize=(SINGLE, 6.4), 
                              subplot_kw={'projection': 'mollweide'})
 
     plot_gw_skymap(observed_map, ax=axes[0], fig=fig)
