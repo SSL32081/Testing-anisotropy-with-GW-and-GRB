@@ -7,6 +7,7 @@ from numpy.lib import recfunctions as rfn
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 import matplotlib.pyplot as plt
+import healpy as hp
 
 plt.style.use('../matplotlibrc')
 FIG_DIR = Path("../figures/")
