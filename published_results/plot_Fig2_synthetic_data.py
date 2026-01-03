@@ -1,23 +1,11 @@
 #!/usr/bin/env python3
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import DATA_DIR, FIG_DIR, SINGLE, read_grb_data
+from utils import DATA_DIR, FIG_DIR, SINGLE, DPI, \
+    read_grb_data, add_healpy_mollweide_ax
 from copy import deepcopy
 import healpy as hp
 from matplotlib.colors import LogNorm
-
-
-def add_healpy_mollweide_ax(fig, ax):
-    # This is to mimic the healpy.mollview function behaviour
-    # Replcae the original axis with a healpy axis
-    left, bottom, right, top = ax.get_position().extents
-    extent = (left, bottom, right - left, top - bottom)
-    fig.delaxes(ax)
-    ax = hp.projaxes.HpxMollweideAxes(
-            fig, extent, coord='G', flipconv='astro'
-        )
-    fig.add_axes(ax)
-    return ax
 
 
 ## GW skyamps
@@ -101,20 +89,20 @@ def relocate_healpy_axes(ax, cb_ax, ref_ax_pos, ref_cb_ax_pos, shift):
 
 def main():
     # Observed GW skyloc maps
-    observed_map = np.load(DATA_DIR / 'GWTC-4_mixed_combined_skymap.npy')
+    gw_syn_map = np.load(DATA_DIR / 'synthetic_O4a_combined_galactic_skymap.npy')
     # GRB locations
-    grb_data = read_grb_data(DATA_DIR / "GRB_Summary_table.txt")
+    grb_syn_data = np.load(DATA_DIR / 'simulated_grb.npy')
 
     fig, axes = plt.subplots(2, 1, figsize=(SINGLE, 4.1), 
                              subplot_kw={'projection': 'mollweide'})
 
-    plot_gw_skymap(observed_map, ax=axes[0], fig=fig)
-    plot_grb_skymap(grb_data, ax=axes[1], fig=fig)
+    plot_gw_skymap(gw_syn_map, ax=axes[0], fig=fig)
+    plot_grb_skymap(grb_syn_data, ax=axes[1], fig=fig)
 
     # Manual Axes Adjustment for the healpy axes
     ax_poss = [ax.get_position() for ax in fig.axes]
     # After the removal and addition of healpy axes, here is the order:
-    # GRB ax, GW ax, GW cb, GRB cb, GLADE ax, GLADE cb
+    # GRB ax, GW ax, GW cb, GRB cb
     # GW Healpy axis and colourbar
     relocate_healpy_axes(
         fig.axes[1], fig.axes[2],
@@ -130,7 +118,7 @@ def main():
             new_pos.y1 -= 0.015
             ax.set_position(new_pos)
 
-    fig.savefig(FIG_DIR / 'Fig1_observed_data.pdf', dpi=500)
+    fig.savefig(FIG_DIR / 'Fig2_synthetic_data.pdf', dpi=DPI)
     return fig, axes
 
 

@@ -49,3 +49,16 @@ def read_grb_simulated_data(file_path):
         dtypes = [(key, 'f8') for key in keys]
     simulated_grbs = np.loadtxt(file_path, dtype=dtypes)
     return simulated_grbs
+
+
+def add_healpy_mollweide_ax(fig, ax):
+    # This is to mimic the healpy.mollview function behaviour
+    # Replcae the original axis with a healpy axis
+    left, bottom, right, top = ax.get_position().extents
+    extent = (left, bottom, right - left, top - bottom)
+    fig.delaxes(ax)
+    ax = hp.projaxes.HpxMollweideAxes(
+            fig, extent, coord='G', flipconv='astro'
+        )
+    fig.add_axes(ax)
+    return ax

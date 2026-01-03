@@ -1,23 +1,11 @@
 #!/usr/bin/env python3
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import DATA_DIR, FIG_DIR, SINGLE, read_grb_data
+from utils import DATA_DIR, FIG_DIR, SINGLE, DPI, \
+    read_grb_data, add_healpy_mollweide_ax
 from copy import deepcopy
 import healpy as hp
 from matplotlib.colors import LogNorm, Normalize
-
-
-def add_healpy_mollweide_ax(fig, ax):
-    # This is to mimic the healpy.mollview function behaviour
-    # Replcae the original axis with a healpy axis
-    left, bottom, right, top = ax.get_position().extents
-    extent = (left, bottom, right - left, top - bottom)
-    fig.delaxes(ax)
-    ax = hp.projaxes.HpxMollweideAxes(
-            fig, extent, coord='G', flipconv='astro'
-        )
-    fig.add_axes(ax)
-    return ax
 
 
 ## GW skyamps
@@ -181,7 +169,7 @@ def main():
             new_pos.y1 -= 0.015
             ax.set_position(new_pos)
 
-    fig.savefig(FIG_DIR / 'Fig1_observed_data.pdf', dpi=500)
+    fig.savefig(FIG_DIR / 'Fig1_observed_data.pdf', dpi=DPI)
     return fig, axes
 
 
