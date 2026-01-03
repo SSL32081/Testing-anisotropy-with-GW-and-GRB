@@ -144,7 +144,7 @@ def relocate_healpy_axes(ax, cb_ax, ref_ax_pos, ref_cb_ax_pos, shift):
 
 def main():
     # Observed GW skyloc maps
-    observed_map = np.load(DATA_DIR / 'GWTC-4_mixed_combined_skymap.npy')
+    observed_map = np.load(DATA_DIR / 'GWTC4p0_combined_galactic_skymap.npy')
     # GRB locations
     grb_data = read_grb_data(DATA_DIR / "GRB_Summary_table.txt")
     # Galaxies catalogue from GLADE+
