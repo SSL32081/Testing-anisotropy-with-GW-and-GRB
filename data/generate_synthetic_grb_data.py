@@ -90,7 +90,8 @@ sim_duration_short = 10.0 ** np.random.normal(popt[1], popt[2], num_short)
 sim_duration_long  = 10.0 ** np.random.normal(popt[4], popt[5], num_long)
 sim_duration = np.concatenate([sim_duration_short, sim_duration_long])
 output_arr['duration'] = sim_duration
-sim_flags = np.concatenate([['s'] * n_short, ['l'] * n_long])
+# Which Gaussian do these points come from?
+sim_flags = np.concatenate([['l'] * num_short, ['r'] * num_long])
 output_arr['flag'] = sim_flags
 
 # Saving the simulated GRB data
