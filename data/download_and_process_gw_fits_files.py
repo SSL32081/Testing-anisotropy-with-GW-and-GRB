@@ -129,16 +129,17 @@ print('All skymap FITS files are ready!')
 # 2. Process GWTC-4 skymap fits
 def process_celestrial_fits_file(filepath):
     if 'galactic' in filepath.name:
-        return hp.read_map(filepath, verbose=False)
-    skymap, header = read_sky_map(filepath, distances=False, moc=False)
-    filename = filepath.name.split('.')[0]
-    output_path = filepath.with_name(filename + "_galactic.fits.gz")
-    if output_path.exists():
-        return None
+        skymap_gal = hp.read_map(filepath, verbose=False)
+    else:
+        skymap, header = read_sky_map(filepath, distances=False, moc=False)
+        filename = filepath.name.split('.')[0]
+        output_path = filepath.with_name(filename + "_galactic.fits.gz")
+        if output_path.exists():
+            return None
 
-    print('Processing:', filepath.name)
-    skymap_gal = rotate_skymap_to_galactic(
-        skymap, header, save=True, output_path=output_path)
+        print('Processing:', filepath.name)
+        skymap_gal = rotate_skymap_to_galactic(
+            skymap, header, save=True, output_path=output_path)
 
     # Resample to common resolution
     # with power=-2, it keeps the sum of the map invariant)
@@ -148,28 +149,28 @@ def process_celestrial_fits_file(filepath):
 
 NSIDE = 256
 NPIX = hp.nside2npix(NSIDE)
-with mp.Pool(processes=8) as pool:
+with mp.Pool(processes=16) as pool:
     processed_maps = pool.map(
         process_celestrial_fits_file, GWTC4_FITS_DIR.glob("*Mixed_*fits.gz"))
 
 resultant_map = np.zeros(NPIX)
 for skymap in processed_maps:
     if skymap is not None:
-        resultant_map += skymap  # Each map is already normalized
+        resultant_map += skymap
 
 resultant_map = resultant_map / np.sum(resultant_map)  # Normalize combined map
 np.save("./GWTC4p0_combined_galactic_skymap.npy", resultant_map)
 
 
 # 3. Process synthetic O4a skymap fits
-with mp.Pool(processes=8) as pool:
+with mp.Pool(processes=16) as pool:
     processed_maps = pool.map(
-        process_celestrial_fits_file, GWTC4_FITS_DIR.glob("*Mixed_*fits.gz"))
+        process_celestrial_fits_file, SYN_O4A_FITS_DIR.glob("H1L1*fits.gz"))
 
 resultant_map = np.zeros(NPIX)
 for skymap in processed_maps:
     if skymap is not None:
-        resultant_map += skymap  # Each map is already normalized
+        resultant_map += skymap
 
 resultant_map = resultant_map / np.sum(resultant_map)  # Normalize combined map
 np.save("./synthetic_O4a_combined_galactic_skymap.npy", resultant_map)
