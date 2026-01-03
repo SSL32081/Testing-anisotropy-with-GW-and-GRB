@@ -57,7 +57,7 @@ num_simulated_grbs = grb_data.size * 1
 print(f"Generating {num_simulated_grbs} simulated GRBs.")
 
 # Initialize output structured array
-keys = ('ra', 'dec', 'l_gal', 'b_gal', 'T90')
+keys = ('ra', 'dec', 'l_gal', 'b_gal', 'duration')
 dtypes = [(key, 'f8') for key in keys]
 dtypes.append(('flag', 'S1'))
 output_arr = np.zeros(num_simulated_grbs, dtype=dtypes)
@@ -89,7 +89,7 @@ num_long = num_simulated_grbs - num_short
 sim_duration_short = 10.0 ** np.random.normal(popt[1], popt[2], num_short)
 sim_duration_long  = 10.0 ** np.random.normal(popt[4], popt[5], num_long)
 sim_duration = np.concatenate([sim_duration_short, sim_duration_long])
-output_arr['T90'] = sim_duration
+output_arr['duration'] = sim_duration
 sim_flags = np.concatenate([['s'] * n_short, ['l'] * n_long])
 output_arr['flag'] = sim_flags
 
