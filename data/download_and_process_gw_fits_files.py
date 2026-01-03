@@ -1,4 +1,25 @@
 #!/usr/bin/env python3
+'''
+This script is composed of two major parts:
+1. Download skymap FITS files from online sources
+2. Process the FITS files to convert them to galactic coordinates
+
+The first part is relatively quick.
+With a decent network connection, it is typically done within 10 mins.
+
+The second part, however, is slow. 
+By default, it will save the converted maps as intermedidate files 
+to allow resuming should the program stop.
+A) For GWTC-4 skymaps, it will produce about 1.4 GB of fits files
+B) For Synthetic skymaps, it will produce more than 30 GB of files,
+    and it will take over a day to run with 16 processes in parallel.
+
+For these reasons, it is highly recommended to simply use the final 
+congregated skymap npy files instead:
+* GWTC4p0_combined_galactic_skymap.npy
+* synthetic_O4a_combined_galactic_skymap.npy
+'''
+
 import os
 from pathlib import Path
 import requests
