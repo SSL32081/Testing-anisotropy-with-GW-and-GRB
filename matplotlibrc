@@ -9,7 +9,7 @@ figure.figsize :  3.85, 2.849
 
 axes.linewidth:   0.8
 axes.edgecolor:   gray
-lines.linewidth:  1.0
+lines.linewidth:  0.8
 lines.markersize: 5
 scatter.edgecolors: none
 figure.constrained_layout.use: True
