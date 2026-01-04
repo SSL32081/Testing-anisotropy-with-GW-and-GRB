@@ -1,5 +1,5 @@
 '''
-Shared utility functions and variables for published results scripts.
+Shared utility functions and variables for all published results scripts.
 '''
 from pathlib import Path
 import numpy as np
@@ -9,6 +9,7 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 import healpy as hp
 
+# Most artistic settings as here:
 plt.style.use('../matplotlibrc')
 FIG_DIR = Path("../figures/")
 DATA_DIR = Path("../data/")
@@ -40,16 +41,6 @@ def read_grb_data(file_path):
     _arr = rfn.append_fields(arr, 'l_gal', l_gal_wrapped, dtypes='f8')
     arr = rfn.append_fields(_arr, 'b_gal', b_gal, dtypes='f8')
     return arr
-
-
-def read_grb_simulated_data(file_path):
-    with open(file_path) as f:
-        header = f.readlines()[0]
-        # Strip away the leading comment and closing newline character
-        keys = header[2:-2].split(' ')
-        dtypes = [(key, 'f8') for key in keys]
-    simulated_grbs = np.loadtxt(file_path, dtype=dtypes)
-    return simulated_grbs
 
 
 def add_healpy_mollweide_ax(fig, ax):
