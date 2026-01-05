@@ -111,6 +111,15 @@ def main():
         ax_poss[0], ax_poss[3], shift=0.00
     )
 
+    # Cannot shift the top row axes up, as it will squeeze against the top
+    # Shift all the lower axes instead.
+    for idx, ax in enumerate(fig.axes):
+        if idx not in (1, 2):
+            new_pos = deepcopy(ax.get_position())
+            new_pos.y0 -= 0.02
+            new_pos.y1 -= 0.02
+            ax.set_position(new_pos)
+
     fig.savefig(FIG_DIR / 'Fig2_synthetic_data.pdf', dpi=DPI)
     return fig, axes
 
