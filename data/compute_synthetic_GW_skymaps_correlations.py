@@ -53,3 +53,4 @@ if __name__ == "__main__":
              accumulated_skymap=gw_synth_skymap_stats[0],
              multipole_spectrum=gw_synth_skymap_stats[1],
              angular_spectrum=gw_synth_skymap_stats[2])
+    # Note on 2025/01/05: The accumulated skymap is no longer needed.
