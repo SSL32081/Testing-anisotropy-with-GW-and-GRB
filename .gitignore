@@ -1,6 +1,9 @@
 # MacOS database
 .DS_Store
 
+# Ignore GRB simulated data intermediates
+data/simulated_grbs/
+
 # Vim / Editor
 *.swp
 *.swo
