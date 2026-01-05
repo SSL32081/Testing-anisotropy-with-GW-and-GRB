@@ -75,7 +75,7 @@ def generate_synthetic_grb_data(coeff, num_simulated_grbs):
     u_rand, v_rand = np.random.uniform(0.0, 1.0, (2, num_simulated_grbs))
 
     # galactic coordinates (in radians, as plain floats)
-    l_rad = 2.0 * np.pi * v_rand                  # [0, 2π)
+    l_rad = 2.0 * np.pi * v_rand - np.pi          # [-π, +π)
     b_rad = np.arcsin(2.0 * u_rand - 1.0)         # [-π/2, π/2]
     output_arr['l_gal'] = l_rad
     output_arr['b_gal'] = b_rad
@@ -126,9 +126,12 @@ def get_grb_skymaps_and_spectra(full_grb_data):
     return cl_full, cl_short, cl_long, Ctheta_full, Ctheta_short, Ctheta_long
 
 def main():
+    np.random.seed(42)  # For reproducibility
+
     grb_data = read_grb_data(DATA_DIR / "GRB_Summary_table.txt")
     coeff = fit_real_grb_data(grb_data)
-    all_correlations = [] * 6
+
+    all_correlations = [[] for _ in range(6)] 
     for idx in range(N_realisations):
         simulated_grbs = generate_synthetic_grb_data(coeff, grb_data.size)
         correlations = get_grb_skymaps_and_spectra(simulated_grbs)

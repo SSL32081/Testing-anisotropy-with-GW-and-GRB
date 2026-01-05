@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import DATA_DIR, FIG_DIR, SINGLE, DPI, \
+from utils import DATA_DIR, FIG_DIR, SYN_O4A_FITS_DIR, SINGLE, DPI, \
     read_grb_data, add_healpy_mollweide_ax
 from copy import deepcopy
 import healpy as hp
@@ -22,7 +22,7 @@ def plot_gw_skymap(skymaps, ax=plt.gca(), fig=plt.gcf()):
             vmin=0, vmax=np.percentile(skymaps[skymaps > 0], 99)
         )
     hp.graticule(dpar=30, dmer=30)
-    ax.set_title(f"Combined GW Skymaps ({N_events} events)")
+    ax.set_title(f"Synthetic GW Skymaps ({N_events} events)")
 
     im = ax.get_images()[0]
     fig.colorbar(
@@ -66,7 +66,7 @@ def plot_grb_skymap(grb_data, ax=plt.gca(), fig=plt.gcf()):
     ax.axhline(y=0, **line_kws)  # Equator
     ax.axvline(x=0, **line_kws)  # Prime meridian
 
-    ax.set_title("GRB Skymap")
+    ax.set_title("Simulated GRB Skymap")
     ax.legend(loc='lower center', bbox_to_anchor=(0.5, -0.17),
               ncol=2, fancybox=False, frameon=False)
     return fig, ax
@@ -89,9 +89,11 @@ def relocate_healpy_axes(ax, cb_ax, ref_ax_pos, ref_cb_ax_pos, shift):
 
 def main():
     # Observed GW skyloc maps
-    gw_syn_map = np.load(DATA_DIR / 'synthetic_O4a_combined_galactic_skymap.npy')
+    gw_syn_map = np.load(DATA_DIR / 'cogregrated_synthetic_GW_correlation_stats.npz')
+    gw_syn_map = gw_syn_map['all_skymap'][0]
     # GRB locations
-    grb_syn_data = np.load(DATA_DIR / 'simulated_grb.npy')
+    grb_syn_data = np.load(DATA_DIR / 'simulated_grbs/simulated_grbs_realisation_0.npz')
+    grb_syn_data = grb_syn_data['simulated_grbs']
 
     fig, axes = plt.subplots(2, 1, figsize=(SINGLE, 4.1), 
                              subplot_kw={'projection': 'mollweide'})
@@ -108,15 +110,6 @@ def main():
         fig.axes[1], fig.axes[2],
         ax_poss[0], ax_poss[3], shift=0.00
     )
-
-    # Cannot shift the top row axes up, as it will squeeze against the top
-    # Shift all the lower axes instead.
-    for idx, ax in enumerate(fig.axes):
-        if idx not in (1, 2):
-            new_pos = deepcopy(ax.get_position())
-            new_pos.y0 -= 0.015
-            new_pos.y1 -= 0.015
-            ax.set_position(new_pos)
 
     fig.savefig(FIG_DIR / 'Fig2_synthetic_data.pdf', dpi=DPI)
     return fig, axes

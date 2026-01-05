@@ -19,10 +19,9 @@ def get_synthetic_GW_correlations(n_sims=1000, n_events=85):
     split_arrays = np.array_split(indices, split_indices)
 
     # Initialise outputs
-    n_accum = 0
     cl_tot_array = []
     C_theta_array = []
-    accumulated_skymap = np.zeros(NPIX)
+    all_skymap = []
     thetas = np.linspace(0.0, np.pi, int(1e4))
 
     # Process each group
@@ -35,8 +34,7 @@ def get_synthetic_GW_correlations(n_sims=1000, n_events=85):
             synthetic_map += skymap
         synthetic_map /= n_events
 
-        accumulated_skymap += synthetic_map
-        n_accum += 1
+        all_skymap.append(synthetic_map)
 
         cl_synth = hp.anafast(synthetic_map, lmax=LMAX) #an array of C_ell values 
         cl_tot_array.append(cl_synth) 
@@ -44,13 +42,13 @@ def get_synthetic_GW_correlations(n_sims=1000, n_events=85):
         C_theta = compute_correlation_function(cl_synth, thetas, LMAX)
         C_theta_array.append(C_theta)
 
-    return accumulated_skymap / n_accum, np.array(cl_tot_array), np.array(C_theta_array)
+    return np.array(all_skymap), np.array(cl_tot_array), np.array(C_theta_array)
 
 
 if __name__ == "__main__":
     gw_synth_skymap_stats = get_synthetic_GW_correlations()
     np.savez(DATA_DIR / "cogregrated_synthetic_GW_correlation_stats.npz",
-             accumulated_skymap=gw_synth_skymap_stats[0],
+             all_skymap=gw_synth_skymap_stats[0],
              multipole_spectrum=gw_synth_skymap_stats[1],
              angular_spectrum=gw_synth_skymap_stats[2])
     # Note on 2025/01/05: The accumulated skymap is no longer needed.
