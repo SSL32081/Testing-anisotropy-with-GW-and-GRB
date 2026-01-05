@@ -95,7 +95,7 @@ def main():
     grb_syn_data = np.load(DATA_DIR / 'simulated_grbs/simulated_grbs_realisation_0.npz')
     grb_syn_data = grb_syn_data['simulated_grbs']
 
-    fig, axes = plt.subplots(2, 1, figsize=(SINGLE, 4.1), 
+    fig, axes = plt.subplots(2, 1, figsize=(SINGLE, 4.3), 
                              subplot_kw={'projection': 'mollweide'})
 
     plot_gw_skymap(gw_syn_map, ax=axes[0], fig=fig)
@@ -116,11 +116,12 @@ def main():
     for idx, ax in enumerate(fig.axes):
         if idx not in (1, 2):
             new_pos = deepcopy(ax.get_position())
-            new_pos.y0 -= 0.02
-            new_pos.y1 -= 0.02
+            new_pos.y0 += 0.02
+            new_pos.y1 += 0.02
             ax.set_position(new_pos)
 
-    fig.savefig(FIG_DIR / 'Fig2_synthetic_data.pdf', dpi=DPI)
+    fig.savefig(FIG_DIR / 'Fig2_synthetic_data.pdf', dpi=DPI, 
+                bbox_inches='tight')
     return fig, axes
 
 
