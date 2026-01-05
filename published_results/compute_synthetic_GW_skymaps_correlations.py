@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+import numpy as np
+from scipy.special import lpmv  # Associated Legendre polynomials
+from utils import DATA_DIR, NSIDE, read_synthetic_GW_skymap, \
+    compute_correlation_function
+import healpy as hp
+
+LMAX = 26
+NPIX = hp.nside2npix(NSIDE)
+
+
+def get_synthetic_GW_correlations(n_sims=1000, n_events=85):
+    # The following splits the n_sims skymaps into as many groups as possible
+    # based on the given n_events per group.
+    indices = np.arange(n_sims)
+    np.random.shuffle(indices)
+    split_indices = np.arange(n_events, n_sims, n_events)
+    split_arrays = np.array_split(indices, split_indices)
+
+    # Initialise outputs
+    n_accum = 0
+    cl_tot_array = []
+    C_theta_array = []
+    accumulated_skymap = np.zeros(NPIX)
+    thetas = np.linspace(0.0, np.pi, int(1e4))
+
+    # Process each group
+    for arr in split_arrays:
+        if arr.size != n_events:
+            continue
+        synthetic_map = np.zeros(NPIX)
+        for idx in arr:
+            skymap = read_synthetic_GW_skymap(idx)
+            synthetic_map += skymap
+        synthetic_map /= n_events
+
+        accumulated_skymap += synthetic_map
+        n_accum += 1
+
+        cl_synth = hp.anafast(synthetic_map, lmax=LMAX) #an array of C_ell values 
+        cl_tot_array.append(cl_synth) 
+
+        C_theta = compute_correlation_function(cl_synth, thetas, LMAX)
+        C_theta_array.append(C_theta)
+
+    return accumulated_skymap / n_accum, np.array(cl_tot_array), np.array(C_theta_array)
+
+
+if __name__ == "__main__":
+    gw_synth_skymap_stats = get_synthetic_GW_correlations()
+    np.savez(DATA_DIR / "synthetic_GW_skymap_correlation_stats.npz",
+             accumulated_skymap=gw_synth_skymap_stats[0],
+             multipole_spectrum=gw_synth_skymap_stats[1],
+             angular_spectrum=gw_synth_skymap_stats[2])
