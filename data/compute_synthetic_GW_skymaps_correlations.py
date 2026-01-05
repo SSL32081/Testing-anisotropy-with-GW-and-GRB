@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 import numpy as np
-from scipy.special import lpmv  # Associated Legendre polynomials
+import healpy as hp
+import sys
+sys.path.append('../published_results/')
 from utils import DATA_DIR, NSIDE, read_synthetic_GW_skymap, \
     compute_correlation_function
-import healpy as hp
 
 LMAX = 26
 NPIX = hp.nside2npix(NSIDE)
@@ -48,7 +49,7 @@ def get_synthetic_GW_correlations(n_sims=1000, n_events=85):
 
 if __name__ == "__main__":
     gw_synth_skymap_stats = get_synthetic_GW_correlations()
-    np.savez(DATA_DIR / "synthetic_GW_skymap_correlation_stats.npz",
+    np.savez(DATA_DIR / "cogregrated_synthetic_GW_skymap_correlation_stats.npz",
              accumulated_skymap=gw_synth_skymap_stats[0],
              multipole_spectrum=gw_synth_skymap_stats[1],
              angular_spectrum=gw_synth_skymap_stats[2])
