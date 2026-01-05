@@ -2,27 +2,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from utils import DATA_DIR, FIG_DIR, DOUBLE, DPI, \
-    read_grb_data
-from copy import deepcopy
+    read_grb_data, compute_grb_skymap
 import healpy as hp
 from matplotlib.colors import Normalize
 
 LMAX = 26
 NSIDE = 128
 
-# The following three functions are imported from mapXmap_utils.py
+# The following two functions are imported from mapXmap_utils.py
 # make skymap from coordinates data
-def make_skymap(theta, phi, nside=NSIDE):
-    lat = np.pi / 2 - theta
-    lon = phi
-    ipix = hp.ang2pix(nside, lat, lon, nest=False)
-
-    skymap = np.zeros(hp.nside2npix(nside))
-    for i in ipix:
-        skymap[i] += 1.0  # Or your actual data value
-    return skymap
-
-
 # map blurring to lmax
 def blur_map(skymap, lmax=LMAX, nside=NSIDE, remove_monopole=False, tol=1e-10):
     alm = hp.map2alm_lsq(skymap, lmax=lmax, mmax=lmax, tol=tol)
@@ -63,7 +51,7 @@ def main():
     gw_skymap = preprocess_skymaps(observed_map)
     # GRB locations
     grb_data = read_grb_data(DATA_DIR / "GRB_Summary_table.txt")
-    grb_skymap = make_skymap(theta=grb_data['b_gal'], phi=grb_data['l_gal'])
+    grb_skymap = compute_grb_skymap(l_rad=grb_data['l_gal'], b_rad=grb_data['b_gal'], nside=NSIDE)
     grb_skymap = preprocess_skymaps(grb_skymap)
 
     fig = plt.figure(figsize=(DOUBLE, 2.8), constrained_layout=False)

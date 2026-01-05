@@ -1,9 +1,11 @@
 '''
 Shared utility functions and variables for all published results scripts.
 '''
+import os
 from pathlib import Path
 import numpy as np
 from numpy.lib import recfunctions as rfn
+from scipy.special import lpmv  # Associated Legendre polynomials
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -13,10 +15,17 @@ import healpy as hp
 plt.style.use('../matplotlibrc')
 FIG_DIR = Path("../figures/")
 DATA_DIR = Path("../data/")
+# Synthetic O4a skymap FITS files directory (replace as appropriate)
+PARENT_DIR = Path(os.environ.get('HANDON_REPO', './')) / 'LVK_skyloc_samples'
+GWTC4_FITS_DIR = PARENT_DIR / 'GWTC4p0_skymaps'
+SYN_O4A_FITS_DIR = PARENT_DIR / 'Synthetic_O4a_skymaps'
 
 SINGLE = 4.1  # inches, single column fig width
 DOUBLE = 8.3  # inches, double column fig width
 DPI = 450  # figure dpi
+
+# This is the nside that all GW skymaps are resized to
+NSIDE = 256
 
 def read_grb_data(file_path):
     # Load the data
@@ -54,3 +63,47 @@ def add_healpy_mollweide_ax(fig, ax):
         )
     fig.add_axes(ax)
     return ax
+
+
+def read_synthetic_GW_skymap(idx, nside=NSIDE):
+    fit_file = SYN_O4A_FITS_DIR / f'H1L1_{idx}_galactic.fits.gz'
+    skymap = hp.read_map(fit_file)
+    skymap_resized = hp.ud_grade(skymap, nside, power=-2)
+    return skymap_resized / np.sum(skymap_resized)
+
+
+def compute_grb_skymap(l_rad, b_rad, nside):
+    """
+    Build a HEALPix map from GRB data in Galactic coordinates.
+
+    healpy.ang2pix default expects:
+      theta = colatitude (radians), phi = longitude (radians) when lonlat=False. :contentReference[oaicite:2]{index=2}
+    """
+    npix = hp.nside2npix(nside)
+    theta = np.pi / 2.0 - b_rad
+    phi = l_rad
+
+    ipix = hp.ang2pix(nside, theta, phi, nest=False)
+    counts = np.zeros(npix, dtype=float)
+    np.add.at(counts, ipix, 1.0)
+
+    if counts.sum() == 0:
+        return counts
+    return counts / counts.sum()
+
+
+def compute_correlation_function(cl, thetas, lmax):
+    """
+    Compute angular correlation function C(θ) from Cℓ.
+    
+    Formula: C(θ) = 1/(4π) * Σ_{ℓ=0}^{ℓmax} (2ℓ+1) Cℓ Pℓ(cos θ)
+    """
+    ell = np.arange(lmax + 1)
+    cos_theta = np.cos(thetas)
+    C_theta = np.zeros_like(thetas, dtype=np.float64)
+    
+    for l in ell:
+        # Legendre polynomial Pℓ(cos θ)
+        C_theta += (2*l + 1) * cl[l] * lpmv(0, l, cos_theta)
+    
+    return C_theta / (4 * np.pi)
