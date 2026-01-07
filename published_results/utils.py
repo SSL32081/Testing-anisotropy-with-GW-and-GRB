@@ -77,7 +77,8 @@ def compute_grb_skymap(l_rad, b_rad, nside):
     Build a HEALPix map from GRB data in Galactic coordinates.
 
     healpy.ang2pix default expects:
-      theta = colatitude (radians), phi = longitude (radians) when lonlat=False. :contentReference[oaicite:2]{index=2}
+      theta = colatitude (radians), 
+      phi = longitude (radians) when lonlat=False.
     """
     npix = hp.nside2npix(nside)
     theta = np.pi / 2.0 - b_rad
@@ -98,12 +99,12 @@ def compute_correlation_function(cl, thetas, lmax):
     
     Formula: C(θ) = 1/(4π) * Σ_{ℓ=0}^{ℓmax} (2ℓ+1) Cℓ Pℓ(cos θ)
     """
-    ell = np.arange(lmax + 1)
+    ells = np.arange(lmax + 1)
     cos_theta = np.cos(thetas)
     C_theta = np.zeros_like(thetas, dtype=np.float64)
     
-    for l in ell:
+    for ell in ells:
         # Legendre polynomial Pℓ(cos θ)
-        C_theta += (2*l + 1) * cl[l] * lpmv(0, l, cos_theta)
+        C_theta += (2 * ell + 1) * cl[ell] * lpmv(0, ell, cos_theta)
     
     return C_theta / (4 * np.pi)
