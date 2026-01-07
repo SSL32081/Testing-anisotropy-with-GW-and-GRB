@@ -47,7 +47,7 @@ def get_synthetic_GW_correlations(n_sims=1000, n_events=85):
 
 if __name__ == "__main__":
     gw_synth_skymap_stats = get_synthetic_GW_correlations()
-    np.savez(DATA_DIR / "cogregrated_synthetic_GW_correlation_stats.npz",
+    np.savez(DATA_DIR / "congregated_synthetic_GW_correlation_stats.npz",
              all_skymap=gw_synth_skymap_stats[0],
              multipole_spectrum=gw_synth_skymap_stats[1],
              angular_spectrum=gw_synth_skymap_stats[2])

@@ -143,7 +143,7 @@ def main():
     all_correlations = [np.array(corr) for corr in all_correlations]
     keys = ('full_mulipole_spectrum', 'short_multipole_spectrum', 'long_multipole_spectrum',
             'full_angular_spectrum', 'short_angular_spectrum', 'long_angular_spectrum')
-    np.savez(DATA_DIR / 'cogregrated_synthetic_grb_correlation_stats.npz',
+    np.savez(DATA_DIR / 'congregated_synthetic_grb_correlation_stats.npz',
             **dict(zip(keys, all_correlations)))
 
 if __name__ == "__main__":
