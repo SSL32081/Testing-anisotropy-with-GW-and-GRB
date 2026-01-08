@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import DATA_DIR, FIG_DIR, SYN_O4A_FITS_DIR, SINGLE, DPI, \
-    read_grb_data, add_healpy_mollweide_ax
+from utils import DATA_DIR, FIG_DIR, SINGLE, DPI, add_healpy_mollweide_ax
 from copy import deepcopy
 import healpy as hp
 from matplotlib.colors import LogNorm
@@ -16,45 +15,45 @@ def plot_gw_skymap(skymaps, ax=plt.gca(), fig=plt.gcf()):
 
     ax = add_healpy_mollweide_ax(fig, ax)
     ax.projmap(
-            skymaps, nest=False,
-            xsize=2600, coord='G',
-            cmap=cmap, badcolor='gray', bgcolor='white',
-            vmin=0, vmax=np.percentile(skymaps[skymaps > 0], 99)
-        )
+        skymaps, nest=False,
+        xsize=2600, coord='G',
+        cmap=cmap, badcolor='gray', bgcolor='white',
+        vmin=0, vmax=np.percentile(skymaps[skymaps > 0], 99)
+    )
     hp.graticule(dpar=30, dmer=30)
     ax.set_title(f"Synthetic GW Skymaps ({N_events} events)")
 
     im = ax.get_images()[0]
     fig.colorbar(
         im, ax=ax,
-        pad=0.04, shrink=0.65, 
+        pad=0.04, shrink=0.65,
         orientation="vertical",
         label=r'Probability Density $M_{\rm GW}(\chi,\phi)$'
     )
     return fig, ax
 
 
-## GRB 
+## GRB
 def plot_grb_skymap(grb_data, ax=plt.gca(), fig=plt.gcf()):
     # Separate long and short GRBs
     short_mask = grb_data['duration'] < 2.0
     long_mask = grb_data['duration'] >= 2.0
     short_grbs = grb_data[short_mask]
     long_grbs = grb_data[long_mask]
-    
-    log_norm = LogNorm(vmin=2, vmax=350)
-    sc = ax.scatter(long_grbs['l_gal'], long_grbs['b_gal'], 
-                      c=long_grbs['duration'], s=2, marker="o",
-                      cmap="winter", norm=log_norm, alpha=0.9,
-                      edgecolors="none", label="Long GRBs", 
-                      rasterized=True)
-    ax.scatter(short_grbs['l_gal'], short_grbs['b_gal'], 
-                 s=5, c='red', marker="+",
-                 linewidths=0.7, alpha=0.9,
-                 label="Short GRBs", rasterized=True)
 
-    fig.colorbar(sc, ax=ax, pad=0.04, shrink=0.65, 
-                 orientation="vertical", 
+    log_norm = LogNorm(vmin=2, vmax=350)
+    sc = ax.scatter(long_grbs['l_gal'], long_grbs['b_gal'],
+                    c=long_grbs['duration'], s=2, marker="o",
+                    cmap="winter", norm=log_norm, alpha=0.9,
+                    edgecolors="none", label="Long GRBs",
+                    rasterized=True)
+    ax.scatter(short_grbs['l_gal'], short_grbs['b_gal'],
+               s=5, c='red', marker="+",
+               linewidths=0.7, alpha=0.9,
+               label="Short GRBs", rasterized=True)
+
+    fig.colorbar(sc, ax=ax, pad=0.04, shrink=0.65,
+                 orientation="vertical",
                  label="Long GRB Burst Duration (s)")
 
     ax.set_xticklabels([])
@@ -89,13 +88,15 @@ def relocate_healpy_axes(ax, cb_ax, ref_ax_pos, ref_cb_ax_pos, shift):
 
 def main():
     # Observed GW skyloc maps
-    gw_syn_map = np.load(DATA_DIR / 'congregated_synthetic_gw_correlation_stats_1000_85_lmax128_n1000.npy')
+    gw_syn_map = np.load(
+        DATA_DIR / 'congregated_synthetic_gw_correlation_stats_1000_85_lmax128_n1000.npy')
     gw_syn_map = gw_syn_map['skymap'][0]
     # GRB locations
-    grb_syn_data = np.load(DATA_DIR / 'simulated_grbs/simulated_grbs_realisation_n1000_0.npz')
+    grb_syn_data = np.load(
+        DATA_DIR / 'simulated_grbs/simulated_grbs_realisation_n1000_0.npz')
     grb_syn_data = grb_syn_data['simulated_grbs']
 
-    fig, axes = plt.subplots(2, 1, figsize=(SINGLE, 4.3), 
+    fig, axes = plt.subplots(2, 1, figsize=(SINGLE, 4.3),
                              subplot_kw={'projection': 'mollweide'})
 
     plot_gw_skymap(gw_syn_map, ax=axes[0], fig=fig)
@@ -120,7 +121,7 @@ def main():
             new_pos.y1 += 0.02
             ax.set_position(new_pos)
 
-    fig.savefig(FIG_DIR / 'Fig2_synthetic_data.pdf', dpi=DPI, 
+    fig.savefig(FIG_DIR / 'Fig2_synthetic_data.pdf', dpi=DPI,
                 bbox_inches='tight')
     return fig, axes
 

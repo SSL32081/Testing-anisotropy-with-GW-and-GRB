@@ -16,45 +16,45 @@ def plot_gw_skymap(skymaps, ax=plt.gca(), fig=plt.gcf()):
 
     ax = add_healpy_mollweide_ax(fig, ax)
     ax.projmap(
-            skymaps, nest=False,
-            xsize=2600, coord='G',
-            cmap=cmap, badcolor='gray', bgcolor='white',
-            vmin=0, vmax=np.percentile(skymaps[skymaps > 0], 99)
-        )
+        skymaps, nest=False,
+        xsize=2600, coord='G',
+        cmap=cmap, badcolor='gray', bgcolor='white',
+        vmin=0, vmax=np.percentile(skymaps[skymaps > 0], 99)
+    )
     hp.graticule(verbose=False, dpar=30, dmer=30)
     ax.set_title(f"Combined GW Skymaps ({N_events} events)")
 
     im = ax.get_images()[0]
     fig.colorbar(
         im, ax=ax,
-        pad=0.04, shrink=0.65, 
+        pad=0.04, shrink=0.65,
         orientation="vertical",
         label=r'Probability Density $M_{\rm GW}(\chi,\phi)$'
     )
     return fig, ax
 
 
-## GRB 
+## GRB
 def plot_grb_skymap(grb_data, ax=plt.gca(), fig=plt.gcf()):
     # Separate long and short GRBs
     short_mask = grb_data['duration'] < 2.0
     long_mask = grb_data['duration'] >= 2.0
     short_grbs = grb_data[short_mask]
     long_grbs = grb_data[long_mask]
-    
-    log_norm = LogNorm(vmin=2, vmax=350)
-    sc = ax.scatter(long_grbs['l_gal'], long_grbs['b_gal'], 
-                      c=long_grbs['duration'], s=2, marker="o",
-                      cmap="winter", norm=log_norm, alpha=0.9,
-                      edgecolors="none", label="Long GRBs", 
-                      rasterized=True)
-    ax.scatter(short_grbs['l_gal'], short_grbs['b_gal'], 
-                 s=5, c='red', marker="+",
-                 linewidths=0.7, alpha=0.9,
-                 label="Short GRBs", rasterized=True)
 
-    fig.colorbar(sc, ax=ax, pad=0.04, shrink=0.65, 
-                 orientation="vertical", 
+    log_norm = LogNorm(vmin=2, vmax=350)
+    sc = ax.scatter(long_grbs['l_gal'], long_grbs['b_gal'],
+                    c=long_grbs['duration'], s=2, marker="o",
+                    cmap="winter", norm=log_norm, alpha=0.9,
+                    edgecolors="none", label="Long GRBs",
+                    rasterized=True)
+    ax.scatter(short_grbs['l_gal'], short_grbs['b_gal'],
+               s=5, c='red', marker="+",
+               linewidths=0.7, alpha=0.9,
+               label="Short GRBs", rasterized=True)
+
+    fig.colorbar(sc, ax=ax, pad=0.04, shrink=0.65,
+                 orientation="vertical",
                  label="Long GRB Burst Duration (s)")
 
     ax.set_xticklabels([])
@@ -93,11 +93,11 @@ def plot_glade_skymap(glade_data, ax=plt.gca(), fig=plt.gcf()):
 
     ax = add_healpy_mollweide_ax(fig, ax)
     ax.projmap(
-            galaxy_map, nest=False,
-            xsize=1000, coord='G',
-            cmap=cmap, badcolor='gray', bgcolor='white',
-            norm='log', vmin=vmin, vmax=vmax
-        )
+        galaxy_map, nest=False,
+        xsize=1000, coord='G',
+        cmap=cmap, badcolor='gray', bgcolor='white',
+        norm='log', vmin=vmin, vmax=vmax
+    )
 
     im = ax.get_images()[0]
     mappable = plt.cm.ScalarMappable(
@@ -105,7 +105,7 @@ def plot_glade_skymap(glade_data, ax=plt.gca(), fig=plt.gcf()):
     )
     fig.colorbar(
         mappable, ax=ax,
-        pad=0.04, shrink=0.65, 
+        pad=0.04, shrink=0.65,
         orientation="vertical",
         label="Galaxies Count"
     )
@@ -138,7 +138,7 @@ def main():
     # Galaxies catalogue from GLADE+
     glade_data = np.load(DATA_DIR / 'GLADE_galactic_coords.npy')
 
-    fig, axes = plt.subplots(3, 1, figsize=(SINGLE, 6.4), 
+    fig, axes = plt.subplots(3, 1, figsize=(SINGLE, 6.4),
                              subplot_kw={'projection': 'mollweide'})
 
     plot_gw_skymap(observed_map, ax=axes[0], fig=fig)

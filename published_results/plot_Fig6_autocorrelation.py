@@ -8,10 +8,11 @@ from utils import DATA_DIR, FIG_DIR, SINGLE, DPI, NSIDE, CF_LMAX, \
 import healpy as hp
 
 
-parser = argparse.ArgumentParser(description='Options for computing the gamma fit of synthetic data.')
+parser = argparse.ArgumentParser(
+    description='Options for computing the gamma fit of synthetic data.')
 parser.add_argument('--ntheta', type=int, default=180,
                     help='Number of theta bins for correlation function computation.')
-parser.add_argument('--lmax', type=int, default=CF_LMAX, 
+parser.add_argument('--lmax', type=int, default=CF_LMAX,
                     help='Maximum multipole moment lmax for correlation function computation.')
 parser.add_argument('--nowindow', action='store_false',
                     help='Whether to apply a resolution-limited window function in the correlation function computation.')
@@ -48,21 +49,21 @@ def plot_gw_correlation(gw_skymap, gw_synth_stat, thetas, ax):
     C_theta_obs = compute_correlation_function(
         cl_obs, thetas * DEG2RAD, LMAX, windowed=WINDOWED)
     ax.plot(thetas, C_theta_obs, 'C3', zorder=10, label='Observed GW Events')
-    
+
     colour = 'k'
     alpha_dict = { 1:  0.5, 2:  0.35, 3:  0.15 }
 
     thetas = np.linspace(0.0, 180.0, gw_synth_stat[mean_key].size)
     for n_sigma in reversed(range(1, 4)):
         ax.fill_between(
-            thetas, 
+            thetas,
             gw_synth_stat[mean_key] - n_sigma * gw_synth_stat[std_key],
-            gw_synth_stat[mean_key] + n_sigma * gw_synth_stat[std_key], 
+            gw_synth_stat[mean_key] + n_sigma * gw_synth_stat[std_key],
             alpha=alpha_dict[n_sigma],
             color=colour, linewidth=0)
 
     # Plot mean correlation function
-    ax.plot(thetas, gw_synth_stat[mean_key], 'C0', label=f'Synthetic GW')
+    ax.plot(thetas, gw_synth_stat[mean_key], 'C0', label='Synthetic GW')
 
     # ax.set_xlabel(r'Angular separation $\theta$ [degrees]')
     ax.set_ylabel(r'Autocorrelation function $C(\theta)$')
@@ -100,12 +101,12 @@ def plot_grb_correlation(grb_data, grb_synth_stats, thetas, ax):
         # Synthetic data
         mean, std = grb_synth_stats[f'{grb_type}_grb_CF_gamma_fit'][mean_key], \
             grb_synth_stats[f'{grb_type}_grb_CF_gamma_fit'][std_key]
-        
+
         thetas = np.linspace(0.0, 180.0, mean.size)
         for n_sigma in reversed(range(1, 4)):
             ax.fill_between(
-                thetas, mean - n_sigma * std, mean + n_sigma * std, 
-                alpha=alpha_dict[n_sigma], color=colour_dict[grb_type], 
+                thetas, mean - n_sigma * std, mean + n_sigma * std,
+                alpha=alpha_dict[n_sigma], color=colour_dict[grb_type],
                 linewidth=0)
 
         # Plot mean correlation function
@@ -118,13 +119,13 @@ def plot_grb_correlation(grb_data, grb_synth_stats, thetas, ax):
     shift_exponential_text(ax)
 
     h1 = [
-        mlines.Line2D([], [], color='k', linestyle='-', label='Observed GRBs'), 
-        mlines.Line2D([], [], color='grey', linestyle='--', label='Synthetic GRBs'), 
+        mlines.Line2D([], [], color='k', linestyle='-', label='Observed GRBs'),
+        mlines.Line2D([], [], color='grey', linestyle='--', label='Synthetic GRBs'),
     ]
-    h2 = [ 
-        mlines.Line2D([], [], color='k', linestyle='-', label='All GRBs'), 
-        mlines.Line2D([], [], color='darkorange', linestyle='-', label='Short GRBs'), 
-        mlines.Line2D([], [], color='darkgreen', linestyle='-', label='Long GRBs'), 
+    h2 = [
+        mlines.Line2D([], [], color='k', linestyle='-', label='All GRBs'),
+        mlines.Line2D([], [], color='darkorange', linestyle='-', label='Short GRBs'),
+        mlines.Line2D([], [], color='darkgreen', linestyle='-', label='Long GRBs'),
     ]
     leg1 = ax.legend(handles=h1, loc='upper center', framealpha=0.5)
     ax.add_artist(leg1)
@@ -163,17 +164,19 @@ def main():
 
     # Read GW correlations
     gw_skymap = np.load(DATA_DIR / 'GWTC4p0_combined_galactic_skymap.npy')
-    gw_synth_fit = np.load(DATA_DIR / f'synthetic_gw_correlation_CLCF_gamma_fit_{suffix}.npz')
+    gw_synth_fit = np.load(
+        DATA_DIR / f'synthetic_gw_correlation_CLCF_gamma_fit_{suffix}.npz')
     # Read GRB correlations
     grb_data = read_grb_data(DATA_DIR / 'GRB_Summary_table.txt')
-    grb_synth_fit = np.load(DATA_DIR / f'synthetic_grb_correlation_CLCF_gamma_fit_{suffix}.npz')
+    grb_synth_fit = np.load(
+        DATA_DIR / f'synthetic_grb_correlation_CLCF_gamma_fit_{suffix}.npz')
     # Read GLADE+ data
     glade_data = np.load(DATA_DIR / 'GLADE_galactic_coords.npy')
 
     # Use the same theta values for all plots
     theta_degs = np.linspace(0.0, 180.0, int(1e4))
 
-    fig, axes = plt.subplots(3, 1, figsize=(SINGLE, 7), 
+    fig, axes = plt.subplots(3, 1, figsize=(SINGLE, 7),
                              sharex=True, height_ratios=[1, 1.5, 1])
 
     plot_gw_correlation(gw_skymap, gw_synth_fit['gw_CF_gamma_fit'], theta_degs, axes[0])

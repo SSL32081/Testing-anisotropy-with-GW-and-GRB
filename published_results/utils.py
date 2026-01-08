@@ -32,6 +32,7 @@ LMAX = max(CF_LMAX, CL_LMAX)
 # This is the nside that all GW skymaps are resized to
 NSIDE = 256
 
+
 def read_grb_data(file_path):
     # Load the data
     keys = ('ra', 'dec', 'pos_err', 'duration', 'redshift')
@@ -50,7 +51,7 @@ def read_grb_data(file_path):
     l_gal = coords.galactic.l.wrap_at(180 * u.deg).radian
     b_gal = coords.galactic.b.radian
     l_gal_wrapped = np.remainder(l_gal + np.pi, 2 * np.pi) - np.pi
-    l_gal_wrapped = -l_gal_wrapped 
+    l_gal_wrapped = -l_gal_wrapped
 
     _arr = rfn.append_fields(arr, 'l_gal', l_gal_wrapped, dtypes='f8')
     arr = rfn.append_fields(_arr, 'b_gal', b_gal, dtypes='f8')
@@ -64,8 +65,8 @@ def add_healpy_mollweide_ax(fig, ax):
     extent = (left, bottom, right - left, top - bottom)
     fig.delaxes(ax)
     ax = hp.projaxes.HpxMollweideAxes(
-            fig, extent, coord='G', flipconv='astro'
-        )
+        fig, extent, coord='G', flipconv='astro'
+    )
     fig.add_axes(ax)
     return ax
 
@@ -82,7 +83,7 @@ def compute_skymap_from_points(l_rad, b_rad, nside):
     Build a HEALPix map from point data in Galactic coordinates.
 
     healpy.ang2pix default expects:
-      theta = colatitude (radians), 
+      theta = colatitude (radians),
       phi = longitude (radians) when lonlat=False.
 
     co-latitude: 0 to π  (N to S)
@@ -108,19 +109,19 @@ def compute_skymap_from_points(l_rad, b_rad, nside):
 def compute_correlation_function(cl, thetas, lmax, lmax_res=26, windowed=True):
     """
     Compute angular correlation function C(θ) from Cℓ.
-    
+
     Formula: C(θ) = 1/(4π) * Σ_{ℓ=0}^{ℓmax} (2ℓ+1) Cℓ Pℓ(cos θ)
     """
     resolution = 1 / lmax_res
     ells = np.arange(lmax + 1)
     cos_theta = np.cos(thetas)
     cf_theta = np.zeros_like(thetas, dtype=np.float64)
-    
+
     for ell in ells:
         # Legendre polynomial Pℓ(cos θ)
         _cf_theta = (2 * ell + 1) * cl[ell] * lpmv(0, ell, cos_theta)
         if windowed:
             _cf_theta *= np.exp(-ell * (ell + 1) * (resolution ** 2))
         cf_theta += _cf_theta
-    
+
     return cf_theta / (4 * np.pi)
