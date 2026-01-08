@@ -40,34 +40,24 @@ def https_download(url, dest_path: Path):
     print(f"Successfully Downloaded to: {dest_path}")
 
 
-def rotate_skymap_to_galactic(skymap, header, save=False, output_path=None):
+def rotate_skymap_to_galactic(skymap, save=False, output_path=None):
     nside = hp.get_nside(skymap)
     print('Get', nside, 'and size: ', skymap.size, 'for: ', output_path.name)
-    ordering = 'nested' if header.get('ORDERING') == 'NESTED' else 'ring'
-    # If not in RING ordering, convert to RING for rotation
-    if ordering == 'nested':
-        skymap = hp.reorder(skymap, n2r=True)  # NESTED to RING
-
     # Convert to spherical harmonics
     lmax = 3 * nside - 1  # Standard choice
     alm = hp.map2alm(skymap, lmax=lmax)
-
     # Create rotator and rotate alms
     r = hp.Rotator(coord=['C', 'G'])
     alm_rotated = r.rotate_alm(alm)
-
     # Convert back to map
     skymap_gal = hp.alm2map(alm_rotated, nside=nside)
-    # Convert back to original
-    if ordering == 'nested':
-        skymap_gal = hp.reorder(skymap_gal, r2n=True)  # RING to NESTED
     # Normalize
     skymap_gal = skymap_gal / np.sum(skymap_gal)
 
     if save:
         # Save to new file
         hp.write_map(output_path, skymap_gal.astype(np.float64),
-                     coord='G', nest=(ordering == 'nested'), overwrite=True)
+                     coord='G', nest=False, overwrite=True)
     return skymap_gal
 
 
@@ -150,21 +140,23 @@ print('All skymap FITS files are ready!')
 # 2. Process GWTC-4 skymap fits
 def process_celestrial_fits_file(filepath):
     if 'galactic' in filepath.name:
-        skymap_gal = hp.read_map(filepath, verbose=False)
+        # We want to make sure the map to be in ring-ordering
+        skymap_gal = hp.read_map(filepath, nest=False)
     else:
-        skymap, header = read_sky_map(filepath, distances=False, moc=False)
         filename = filepath.name.split('.')[0]
         output_path = filepath.with_name(filename + "_galactic.fits.gz")
         if output_path.exists():
             return None
 
         print('Processing:', filepath.name)
+        # Ensure all maps are in RING ordering
+        skymap, _ = read_sky_map(filepath, nest=False, distances=False, moc=False)
         skymap_gal = rotate_skymap_to_galactic(
-            skymap, header, save=True, output_path=output_path)
+            skymap, save=True, output_path=output_path)
 
     # Resample to common resolution
     # with power=-2, it keeps the sum of the map invariant)
-    skymap_resized = hp.ud_grade(skymap_gal, NSIDE, power=-2)
+    skymap_resized = hp.ud_grade(skymap_gal, NSIDE, order_in='RING', power=-2)
     return skymap_resized / np.sum(skymap_resized)
 
 
@@ -181,7 +173,6 @@ for skymap in processed_maps:
 
 resultant_map = resultant_map / np.sum(resultant_map)  # Normalize combined map
 np.save("./GWTC4p0_combined_galactic_skymap.npy", resultant_map)
-
 
 # 3. Process synthetic O4a skymap fits
 with mp.Pool(processes=16) as pool:

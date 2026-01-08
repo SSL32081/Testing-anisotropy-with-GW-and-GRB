@@ -8,8 +8,8 @@ from scipy.stats import norm
 
 import sys
 sys.path.append('../published_results/')
-from utils import DATA_DIR, read_grb_data, compute_grb_skymap, \
-    compute_correlation_function
+from utils import DATA_DIR, NSIDE, read_grb_data, \
+    compute_correlation_function, compute_skymap_from_points
 
 # Initialize output structured array
 keys = ('ra', 'dec', 'l_gal', 'b_gal', 'duration')
@@ -17,7 +17,6 @@ dtypes = [(key, 'f8') for key in keys]
 dtypes.append(('flag', 'S1'))
 
 LMAX = 26
-NSIDE = 128
 N_realisations = 100
 thetas = np.linspace(0.0, np.pi, int(1e4))
 
@@ -109,9 +108,9 @@ def get_grb_skymaps_and_spectra(full_grb_data):
     durations = full_grb_data['duration']
     short_grbs = full_grb_data[durations < 2.0]
     long_grbs = full_grb_data[durations >= 2.0]
-    skymap_full = compute_grb_skymap(full_grb_data['l_gal'], full_grb_data['b_gal'], nside=NSIDE)
-    skymap_short = compute_grb_skymap(short_grbs['l_gal'], short_grbs['b_gal'], nside=NSIDE)
-    skymap_long = compute_grb_skymap(long_grbs['l_gal'], long_grbs['b_gal'], nside=NSIDE)
+    skymap_full = compute_skymap_from_points(full_grb_data['l_gal'], full_grb_data['b_gal'], nside=NSIDE)
+    skymap_short = compute_skymap_from_points(short_grbs['l_gal'], short_grbs['b_gal'], nside=NSIDE)
+    skymap_long = compute_skymap_from_points(long_grbs['l_gal'], long_grbs['b_gal'], nside=NSIDE)
 
     # Compute angular power spectra
     cl_full = hp.anafast(skymap_full, lmax=LMAX) 
@@ -124,6 +123,7 @@ def get_grb_skymaps_and_spectra(full_grb_data):
     Ctheta_long = compute_correlation_function(cl_long, thetas, LMAX)
 
     return cl_full, cl_short, cl_long, Ctheta_full, Ctheta_short, Ctheta_long
+
 
 def main():
     np.random.seed(42)  # For reproducibility

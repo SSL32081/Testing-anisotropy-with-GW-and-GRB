@@ -18,6 +18,8 @@ def get_synthetic_GW_correlations(n_sims=1000, n_events=85):
     split_indices = np.arange(n_events, n_sims, n_events)
     split_arrays = np.array_split(indices, split_indices)
 
+    print(f"Processing {len(split_arrays) - 1} synthetic GW skymap groups with {n_events} events each")
+
     # Initialise outputs
     cl_tot_array = []
     C_theta_array = []
@@ -36,7 +38,7 @@ def get_synthetic_GW_correlations(n_sims=1000, n_events=85):
 
         all_skymap.append(synthetic_map)
 
-        cl_synth = hp.anafast(synthetic_map, lmax=LMAX) #an array of C_ell values 
+        cl_synth = hp.anafast(synthetic_map, lmax=LMAX)  #an array of C_ell values 
         cl_tot_array.append(cl_synth) 
 
         C_theta = compute_correlation_function(cl_synth, thetas, LMAX)

@@ -67,23 +67,30 @@ def add_healpy_mollweide_ax(fig, ax):
 
 def read_synthetic_GW_skymap(idx, nside=NSIDE):
     fit_file = SYN_O4A_FITS_DIR / f'H1L1_{idx}_galactic.fits.gz'
-    skymap = hp.read_map(fit_file)
+    skymap = hp.read_map(fit_file, nest=False)
     skymap_resized = hp.ud_grade(skymap, nside, power=-2)
     return skymap_resized / np.sum(skymap_resized)
 
 
-def compute_grb_skymap(l_rad, b_rad, nside):
+def compute_skymap_from_points(l_rad, b_rad, nside):
     """
-    Build a HEALPix map from GRB data in Galactic coordinates.
+    Build a HEALPix map from point data in Galactic coordinates.
 
     healpy.ang2pix default expects:
       theta = colatitude (radians), 
       phi = longitude (radians) when lonlat=False.
+
+    co-latitude: 0 to π  (N to S)
+    longitude: 0 to 2π
+
+    galactic latitude b: π/2 to -π/2 (N to S)
+    galactic longitude l: 0 to 2π
     """
     npix = hp.nside2npix(nside)
     theta = np.pi / 2.0 - b_rad
     phi = l_rad
 
+    # Ring-ordering to be compatible with anafast
     ipix = hp.ang2pix(nside, theta, phi, nest=False)
     counts = np.zeros(npix, dtype=float)
     np.add.at(counts, ipix, 1.0)
