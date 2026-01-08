@@ -89,10 +89,10 @@ def relocate_healpy_axes(ax, cb_ax, ref_ax_pos, ref_cb_ax_pos, shift):
 
 def main():
     # Observed GW skyloc maps
-    gw_syn_map = np.load(DATA_DIR / 'congregated_synthetic_gw_correlation_stats.npz')
-    gw_syn_map = gw_syn_map['all_skymap'][0]
+    gw_syn_map = np.load(DATA_DIR / 'congregated_synthetic_gw_correlation_stats_1000_85_lmax128_n1000.npy')
+    gw_syn_map = gw_syn_map['skymap'][0]
     # GRB locations
-    grb_syn_data = np.load(DATA_DIR / 'simulated_grbs/simulated_grbs_realisation_0.npz')
+    grb_syn_data = np.load(DATA_DIR / 'simulated_grbs/simulated_grbs_realisation_n1000_0.npz')
     grb_syn_data = grb_syn_data['simulated_grbs']
 
     fig, axes = plt.subplots(2, 1, figsize=(SINGLE, 4.3), 

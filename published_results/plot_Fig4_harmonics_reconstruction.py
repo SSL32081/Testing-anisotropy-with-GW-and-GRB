@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import DATA_DIR, FIG_DIR, DOUBLE, DPI, \
-    read_grb_data, compute_grb_skymap
+from utils import DATA_DIR, FIG_DIR, DOUBLE, DPI, NSIDE, \
+    read_grb_data, compute_skymap_from_points
 import healpy as hp
 from matplotlib.colors import Normalize
 
 LMAX = 26
-NSIDE = 128
 
 # The following two functions are imported from mapXmap_utils.py
 # make skymap from coordinates data
@@ -51,7 +50,7 @@ def main():
     gw_skymap = preprocess_skymaps(observed_map)
     # GRB locations
     grb_data = read_grb_data(DATA_DIR / "GRB_Summary_table.txt")
-    grb_skymap = compute_grb_skymap(l_rad=grb_data['l_gal'], b_rad=grb_data['b_gal'], nside=NSIDE)
+    grb_skymap = compute_skymap_from_points(l_rad=grb_data['l_gal'], b_rad=grb_data['b_gal'], nside=NSIDE)
     grb_skymap = preprocess_skymaps(grb_skymap)
 
     fig = plt.figure(figsize=(DOUBLE, 2.8), constrained_layout=False)
