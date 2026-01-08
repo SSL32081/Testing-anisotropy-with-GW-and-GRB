@@ -18,7 +18,8 @@ dtypes.append(('flag', 'S1'))
 
 LMAX = 26
 N_realisations = 100
-thetas = np.linspace(0.0, np.pi, int(1e4))
+thetas = np.linspace(0.0, np.pi, int(1e3))
+ntheta = thetas.size
 
 
 def bimodal_log(x, A1, mu1, sigma1, A2, mu2, sigma2):
@@ -136,14 +137,14 @@ def main():
         simulated_grbs = generate_synthetic_grb_data(coeff, grb_data.size)
         correlations = get_grb_skymaps_and_spectra(simulated_grbs)
         keys = ('cl_full', 'cl_short', 'cl_long', 'Ctheta_full', 'Ctheta_short', 'Ctheta_long')
-        np.savez(DATA_DIR / f'simulated_grbs/simulated_grbs_realisation_{idx:d}.npz', 
+        np.savez(DATA_DIR / f'simulated_grbs/simulated_grbs_realisation_n{ntheta:d}_{idx:d}.npz', 
                  simulated_grbs=simulated_grbs, **dict(zip(keys, correlations)))
         for accumulator, element in zip(all_correlations, correlations):
             accumulator.append(element)
     all_correlations = [np.array(corr) for corr in all_correlations]
     keys = ('full_mulipole_spectrum', 'short_multipole_spectrum', 'long_multipole_spectrum',
             'full_angular_spectrum', 'short_angular_spectrum', 'long_angular_spectrum')
-    np.savez(DATA_DIR / 'congregated_synthetic_grb_correlation_stats.npz',
+    np.savez(DATA_DIR / f'congregated_synthetic_grb_correlation_stats_n{ntheta:d}.npz',
             **dict(zip(keys, all_correlations)))
 
 if __name__ == "__main__":

@@ -24,7 +24,6 @@ def get_synthetic_GW_correlations(n_sims=1000, n_events=85):
     cl_tot_array = []
     C_theta_array = []
     all_skymap = []
-    thetas = np.linspace(0.0, np.pi, int(1e4))
 
     # Process each group
     for arr in split_arrays:
@@ -48,8 +47,9 @@ def get_synthetic_GW_correlations(n_sims=1000, n_events=85):
 
 
 if __name__ == "__main__":
+    thetas = np.linspace(0.0, np.pi, int(1e3))
     gw_synth_skymap_stats = get_synthetic_GW_correlations()
-    np.savez(DATA_DIR / "congregated_synthetic_GW_correlation_stats.npz",
+    np.savez(DATA_DIR / f"congregated_synthetic_GW_correlation_stats_n{thetas.size:d}.npz",
              all_skymap=gw_synth_skymap_stats[0],
              multipole_spectrum=gw_synth_skymap_stats[1],
              angular_spectrum=gw_synth_skymap_stats[2])
