@@ -17,7 +17,7 @@ keys = ('ra', 'dec', 'l_gal', 'b_gal', 'duration')
 dtypes = [(key, 'f8') for key in keys]
 dtypes.append(('flag', 'S1'))
 
-N_realisations = 100
+N_realisations = 1000
 thetas = np.linspace(0.0, np.pi, int(1e3))
 ntheta = thetas.size
 
