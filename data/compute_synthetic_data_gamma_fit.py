@@ -12,7 +12,7 @@ parser.add_argument('--ntheta', type=int, default=180,
                     help='Number of theta bins for correlation function computation.')
 parser.add_argument('--lmax', type=int, default=CF_LMAX, 
                     help='Maximum multipole moment lmax for correlation function computation.')
-parser.add_argument('--windowed', action='store_true',
+parser.add_argument('--nowindow', action='store_false',
                     help='Whether to apply a resolution-limited window function in the correlation function computation.')
 
 
@@ -46,7 +46,7 @@ def main():
     args = parser.parse_args()
     NTHETAS = args.ntheta
     LMAX = args.lmax
-    WINDOWED = args.windowed
+    WINDOWED = ~args.nowindow
 
     suffix = f"n{NTHETAS:d}_lmax{LMAX:d}"
     if WINDOWED:
@@ -55,21 +55,28 @@ def main():
     # Read synthetic data
     gw_synth_data = np.load(DATA_DIR / 'congregated_synthetic_gw_correlation_stats_1000_85_lmax128_n1000.npy')
     print('(Multi-)Processing gamma fit for synthetic GW correlations...')
-    gw_fit_results = mp_gamma_fit(
+    gw_gamma_fits = {}
+    gw_gamma_fits['gw_CL_gamma_fit'] = mp_gamma_fit(
+        gw_synth_data['multipole_spectrum'].T
+    )
+    gw_gamma_fits['gw_CF_gamma_fit'] = mp_gamma_fit(
         recompute_correlation_function(
             gw_synth_data['multipole_spectrum'],
             gw_synth_data['angular_spectrum'],
             lmax=LMAX, windowed=WINDOWED, nthetas=NTHETAS 
         )
     )
-    np.save(DATA_DIR / f'synthetic_gw_correlation_CF_gamma_fit_{suffix}.npy', gw_fit_results)
+    np.savez(DATA_DIR / f'synthetic_gw_correlation_CLCF_gamma_fit_{suffix}', **gw_gamma_fits)
 
     grb_synth_data = np.load(DATA_DIR / 'congregated_synthetic_grb_correlation_stats_1000_lmax128_n1000.npy')
     print('(Multi-)Processing gamma fit for synthetic GRB correlations...')
     grb_gamma_fits = {}
     for grb_type in ('full', 'short', 'long'):
         print(f'  - {grb_type.capitalize()} GRB sample')
-        grb_gamma_fits[f'{grb_type}_grb_gamma_fit'] = mp_gamma_fit(
+        grb_gamma_fits[f'{grb_type}_grb_CL_gamma_fit'] = mp_gamma_fit(
+            grb_synth_data[f'{grb_type}_multipole_spectrum'].T
+        )
+        grb_gamma_fits[f'{grb_type}_grb_CF_gamma_fit'] = mp_gamma_fit(
             recompute_correlation_function(
                 grb_synth_data[f'{grb_type}_multipole_spectrum'],
                 grb_synth_data[f'{grb_type}_angular_spectrum'],
@@ -77,7 +84,7 @@ def main():
             )
         )
 
-    np.savez(DATA_DIR / f'synthetic_grb_correlation_CF_gamma_fit_{suffix}.npz', **grb_gamma_fits)
+    np.savez(DATA_DIR / f'synthetic_grb_correlation_CLCF_gamma_fit_{suffix}', **grb_gamma_fits)
 
 
 if __name__ == "__main__":

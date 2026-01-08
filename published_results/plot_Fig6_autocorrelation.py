@@ -13,7 +13,7 @@ parser.add_argument('--ntheta', type=int, default=180,
                     help='Number of theta bins for correlation function computation.')
 parser.add_argument('--lmax', type=int, default=CF_LMAX, 
                     help='Maximum multipole moment lmax for correlation function computation.')
-parser.add_argument('--windowed', action='store_true',
+parser.add_argument('--nowindow', action='store_false',
                     help='Whether to apply a resolution-limited window function in the correlation function computation.')
 parser.add_argument('--gammafit', action='store_true',
                     help='Whether to use gamma fit results for plotting.')
@@ -25,7 +25,7 @@ NPIX = hp.nside2npix(NSIDE)
 args = parser.parse_args()
 LMAX = args.lmax
 NTHETAS = args.ntheta
-WINDOWED = args.windowed
+WINDOWED = ~args.nowindow
 USE_GAMMA_FIT = args.gammafit
 mean_key = 'mean'
 std_key = 'std'
@@ -38,32 +38,6 @@ def shift_exponential_text(ax):
     exp = ax.yaxis.get_offset_text()
     exp.set_x(-0.05)
     return exp
-
-
-def plot_glade_correlation(glade_data, thetas, ax):
-    print("Compute map for GLADE+ data...")
-    galaxy_map = compute_skymap_from_points(
-        glade_data['l_gal'], glade_data['b_gal'], NSIDE
-    )
-
-    print("Computing angular power spectrum...")
-    cl_obs = hp.anafast(galaxy_map, lmax=CF_LMAX)
-
-    # Compute correlation function
-    print("Computing angular correlation function...")
-    C_theta_obs = compute_correlation_function(
-        cl_obs, thetas * DEG2RAD, LMAX, windowed=WINDOWED)
-
-    ax.plot(thetas, C_theta_obs, 'C3', label='GLADE+ Galaxies')
-
-    ax.set_xlabel(r'Angular separation $\theta$ [degrees]')
-    ax.set_ylabel(r'Autocorrelation function $C(\theta)$')
-    # ax.set_ylim(1e-14,1e-10) #NOTE: this may affect visual interpretation though
-    ax.set_title('GLADE+ Galaxy Distribution')
-    # ax.set_yscale('log')
-    ax.grid(True, which='both', ls='--', lw=0.5)
-    # ax.legend()
-    shift_exponential_text(ax)
 
 
 def plot_gw_correlation(gw_skymap, gw_synth_stat, thetas, ax):
@@ -124,8 +98,8 @@ def plot_grb_correlation(grb_data, grb_synth_stats, thetas, ax):
         ax.plot(thetas, C_theta_obs, line_colour_dict[grb_type], zorder=10)
 
         # Synthetic data
-        mean, std = grb_synth_stats[f'{grb_type}_grb_gamma_fit'][mean_key], \
-            grb_synth_stats[f'{grb_type}_grb_gamma_fit'][std_key]
+        mean, std = grb_synth_stats[f'{grb_type}_grb_CF_gamma_fit'][mean_key], \
+            grb_synth_stats[f'{grb_type}_grb_CF_gamma_fit'][std_key]
         
         thetas = np.linspace(0.0, 180.0, mean.size)
         for n_sigma in reversed(range(1, 4)):
@@ -152,11 +126,34 @@ def plot_grb_correlation(grb_data, grb_synth_stats, thetas, ax):
         mlines.Line2D([], [], color='darkorange', linestyle='-', label='Short GRBs'), 
         mlines.Line2D([], [], color='darkgreen', linestyle='-', label='Long GRBs'), 
     ]
-    leg1 = ax.legend(handles=h1, loc='upper right', framealpha=0.5)
+    leg1 = ax.legend(handles=h1, loc='upper center', framealpha=0.5)
     ax.add_artist(leg1)
-    ax.legend(handles=h2, loc='right', framealpha=0.5)
+    ax.legend(handles=h2, loc='upper right', framealpha=0.5)
 
     return ax
+
+
+def plot_glade_correlation(glade_data, thetas, ax):
+    print("Compute map for GLADE+ data...")
+    galaxy_map = compute_skymap_from_points(
+        glade_data['l_gal'], glade_data['b_gal'], NSIDE
+    )
+
+    print("Computing angular power spectrum...")
+    cl_obs = hp.anafast(galaxy_map, lmax=CF_LMAX)
+
+    # Compute correlation function
+    print("Computing angular correlation function...")
+    C_theta_obs = compute_correlation_function(
+        cl_obs, thetas * DEG2RAD, LMAX, windowed=WINDOWED)
+
+    ax.plot(thetas, C_theta_obs, 'C3', label='GLADE+ Galaxies')
+
+    ax.set_xlabel(r'Angular separation $\theta$ [degrees]')
+    ax.set_ylabel(r'Autocorrelation function $C(\theta)$')
+    ax.set_title('GLADE+ Galaxy Distribution')
+    ax.grid(True, which='both', ls='--', lw=0.5)
+    shift_exponential_text(ax)
 
 
 def main():
@@ -166,10 +163,10 @@ def main():
 
     # Read GW correlations
     gw_skymap = np.load(DATA_DIR / 'GWTC4p0_combined_galactic_skymap.npy')
-    gw_synth_fit = np.load(DATA_DIR / f'synthetic_gw_correlation_CF_gamma_fit_{suffix}.npy')
+    gw_synth_fit = np.load(DATA_DIR / f'synthetic_gw_correlation_CLCF_gamma_fit_{suffix}.npz')
     # Read GRB correlations
     grb_data = read_grb_data(DATA_DIR / 'GRB_Summary_table.txt')
-    grb_synth_fit = np.load(DATA_DIR / f'synthetic_grb_correlation_CF_gamma_fit_{suffix}.npz')
+    grb_synth_fit = np.load(DATA_DIR / f'synthetic_grb_correlation_CLCF_gamma_fit_{suffix}.npz')
     # Read GLADE+ data
     glade_data = np.load(DATA_DIR / 'GLADE_galactic_coords.npy')
 
@@ -179,7 +176,7 @@ def main():
     fig, axes = plt.subplots(3, 1, figsize=(SINGLE, 7), 
                              sharex=True, height_ratios=[1, 1.5, 1])
 
-    plot_gw_correlation(gw_skymap, gw_synth_fit, theta_degs, axes[0])
+    plot_gw_correlation(gw_skymap, gw_synth_fit['gw_CF_gamma_fit'], theta_degs, axes[0])
     plot_grb_correlation(grb_data, grb_synth_fit, theta_degs, axes[1])
     plot_glade_correlation(glade_data, theta_degs, axes[2])
     axes[2].set_xlim(0, 180)
