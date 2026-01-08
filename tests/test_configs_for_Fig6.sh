@@ -11,12 +11,12 @@ for nths in 180 500; do
         echo "Onto nthetas = ${nths} and lmax = ${lmax}"
         cd ${DATA_DIR}
         python compute_synthetic_data_gamma_fit.py --ntheta ${nths} --lmax ${lmax} 
-        python compute_synthetic_data_gamma_fit.py --ntheta ${nths} --lmax ${lmax} --windowed
+        python compute_synthetic_data_gamma_fit.py --ntheta ${nths} --lmax ${lmax} --nowindow
         cd ${PLOT_DIR}
         python plot_Fig6_autocorrelation.py --ntheta ${nths} --lmax ${lmax} & 
-        python plot_Fig6_autocorrelation.py --ntheta ${nths} --lmax ${lmax} --windowed & 
+        python plot_Fig6_autocorrelation.py --ntheta ${nths} --lmax ${lmax} --nowindow & 
         python plot_Fig6_autocorrelation.py --ntheta ${nths} --lmax ${lmax} --gammafit &
-        python plot_Fig6_autocorrelation.py --ntheta ${nths} --lmax ${lmax} --windowed --gammafit &
+        python plot_Fig6_autocorrelation.py --ntheta ${nths} --lmax ${lmax} --nowindow --gammafit &
     done
 done
 
