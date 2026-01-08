@@ -127,10 +127,7 @@ def get_grb_skymaps_and_spectra(full_grb_data):
 
 
 def process_single_realisation(idx):
-    grb_data = read_grb_data(DATA_DIR / "GRB_Summary_table.txt")
-    coeff = fit_real_grb_data(grb_data)
-
-    np.random.seed()
+    np.random.seed(idx)
     simulated_grbs = generate_synthetic_grb_data(coeff, grb_data.size)
     correlations = get_grb_skymaps_and_spectra(simulated_grbs)
     keys = ('cl_full', 'cl_short', 'cl_long', 'Ctheta_full', 'Ctheta_short', 'Ctheta_long')
@@ -138,7 +135,13 @@ def process_single_realisation(idx):
                 simulated_grbs=simulated_grbs, **dict(zip(keys, correlations)))
     return correlations
 
+
 def main():
+    global grb_data 
+    grb_data = read_grb_data(DATA_DIR / "GRB_Summary_table.txt")
+    global coeff 
+    coeff = fit_real_grb_data(grb_data)
+
     with Pool(processes=20) as pool:
         all_correlations = pool.map(process_single_realisation, range(N_realisations))
 
