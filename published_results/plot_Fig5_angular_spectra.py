@@ -1,63 +1,148 @@
 #!/usr/bin/env python3
-import os
-from pathlib import Path
 import numpy as np
-from scipy.special import lpmv  # Associated Legendre polynomials
+import argparse
 import matplotlib.pyplot as plt
-from utils import DATA_DIR, FIG_DIR, DOUBLE, DPI, \
-    read_grb_data
+import matplotlib.lines as mlines
+from utils import DATA_DIR, FIG_DIR, SINGLE, DPI, NSIDE, \
+    CL_LMAX, CF_LMAX, \
+    read_grb_data, compute_skymap_from_points
 import healpy as hp
-from matplotlib.colors import Normalize
 
-LMAX = 26
-NSIDE = 256
 NPIX = hp.nside2npix(NSIDE)
 
+parser = argparse.ArgumentParser(description='Options for computing the gamma fit of synthetic data.')
+parser.add_argument('--gammafit', action='store_true',
+                    help='Whether to use gamma fit results for plotting.')
+
+args = parser.parse_args()
+USE_GAMMA_FIT = args.gammafit
+mean_key = 'mean'
+std_key = 'std'
+if USE_GAMMA_FIT:
+    mean_key = 'gamma_mean'
+    std_key = 'gamma_std'
+
+def shift_exponential_text(ax):
+    exp = ax.yaxis.get_offset_text()
+    exp.set_x(-0.05)
+    return exp
 
 
+def plot_gw_correlation(gw_skymap, gw_synth_stat, ells, ax):
+    # Observed data
+    print("Computing angular power spectrum...")
+    # gw_map_ring = hp.reorder(gw_data, n2r=True)
+    cl_obs = hp.anafast(gw_skymap, lmax=CF_LMAX)
+    ax.plot(ells, cl_obs[1:CL_LMAX+1], 'C3', zorder=10, label='Observed GW Events')
+    
+    colour = 'k'
+    alpha_dict = { 1:  0.5, 2:  0.35, 3:  0.15 }
+
+    means = gw_synth_stat[mean_key][1:CL_LMAX+1]
+    std = gw_synth_stat[std_key][1:CL_LMAX+1]
+    for n_sigma in reversed(range(1, 4)):
+        ax.fill_between(
+            ells, means - n_sigma * std, means + n_sigma * std,
+            alpha=alpha_dict[n_sigma], color=colour, linewidth=0)
+
+    # Plot mean correlation function
+    ax.plot(ells, gw_synth_stat[mean_key][1:CL_LMAX+1], 'C0', label=f'Synthetic GW')
+
+    ax.minorticks_on()
+    ax.set_ylabel(r'Power Spectrum $C_\ell$')
+    ax.set_title('Synthetic vs Observed GW Skymaps')
+    ax.grid(True, which='major', ls='--', lw=0.5)
+    ax.legend(framealpha=0.5)
+    shift_exponential_text(ax)
 
 
+def plot_grb_correlation(grb_data, grb_synth_stats, ells, ax):
+    obs_grb_dict = {
+        'full': grb_data,
+        'short': grb_data[grb_data['duration'] < 2.0],
+        'long': grb_data[grb_data['duration'] >= 2.0]
+    }
 
+    colour_dict = { 'full': 'grey', 'short': 'C1', 'long': 'C2' }
+    line_colour_dict = { 'full': 'k', 'short': 'darkorange', 'long': 'darkgreen' }
+    alpha_dict = { 1:  0.5, 2:  0.35, 3:  0.15 }
+
+    for idx, grb_type in enumerate(('full', 'short', 'long')):
+        # Convert GRB data to HEALPix map
+        print("Compute map for GRB data...")
+        grb_dataset = obs_grb_dict[grb_type]
+        grb_map = compute_skymap_from_points(grb_dataset['l_gal'], grb_dataset['b_gal'], NSIDE)
+        print("Computing angular power spectrum...")
+        cl_obs = hp.anafast(grb_map, lmax=CF_LMAX)
+        print("Computing angular correlation function...")
+        # Plot observed data
+        ax.plot(ells, cl_obs[1:CL_LMAX+1], line_colour_dict[grb_type], zorder=10)
+
+        # Synthetic data
+        mean = grb_synth_stats[f'{grb_type}_grb_CL_gamma_fit'][mean_key][1:CL_LMAX+1]
+        std = grb_synth_stats[f'{grb_type}_grb_CL_gamma_fit'][std_key][1:CL_LMAX+1]
+
+        z_ord = idx + 1 if idx != 0 else 5
+        
+        for n_sigma in reversed(range(1, 4)):
+            ax.fill_between(
+                ells, mean - n_sigma * std, mean + n_sigma * std, 
+                alpha=alpha_dict[n_sigma], color=colour_dict[grb_type], 
+                linewidth=0, zorder=z_ord)
+
+        # Plot mean correlation function
+        ax.plot(ells, mean, line_colour_dict[grb_type], linestyle='--', zorder=z_ord+1)
+
+    ax.set_yscale('log')
+    ax.minorticks_on()
+    ax.set_xlabel(r'Multipole moment $\ell$')
+    ax.set_ylabel(r'Power Spectrum $C_\ell$')
+    ax.set_title('Synthetic vs Observed GRB Skymaps')
+    ax.grid(True, which='major', ls='--', lw=0.5)
+    shift_exponential_text(ax)
+
+    h1 = [
+        mlines.Line2D([], [], color='k', linestyle='-', label='Observed GRBs'), 
+        mlines.Line2D([], [], color='grey', linestyle='--', label='Synthetic GRBs'), 
+    ]
+    h2 = [ 
+        mlines.Line2D([], [], color='k', linestyle='-', label='All GRBs'), 
+        mlines.Line2D([], [], color='darkorange', linestyle='-', label='Short GRBs'), 
+        mlines.Line2D([], [], color='darkgreen', linestyle='-', label='Long GRBs'), 
+    ]
+    leg1 = ax.legend(handles=h1, loc='lower right', framealpha=0.5)
+    ax.add_artist(leg1)
+    ax.legend(handles=h2, loc='upper right', framealpha=0.5)
+
+    return ax
 
 
 def main():
-    
-    # Read GW skymaps
-    gwtc4_skymap = np.load(DATA_DIR / 'GWTC4p0_combined_galactic_skymap.npy')
-    o4a_synth_skymap = np.load(DATA_DIR / 'synthetic_O4a_combined_galactic_skymap.npy')
-    # Plot with fill_between for nice shaded regions
-    plt.figure(figsize=(12, 8))
+    # This simply helps to choose the correct filename suffixes
+    suffix = "n180_lmax128_windowed"
 
-    # Plot 3σ region first (so it's in the background)
-    plt.fill_between(ell[1:], 
-                        np.maximum(1e-16, cl_3sigma_lower[1:]),  # Avoid negative values for log scale
-                        cl_3sigma_upper[1:], 
-                        alpha=0.15, color='black')
+    # Read GW correlations
+    gw_skymap = np.load(DATA_DIR / 'GWTC4p0_combined_galactic_skymap.npy')
+    gw_synth_fit = np.load(DATA_DIR / f'synthetic_gw_correlation_CLCF_gamma_fit_{suffix}.npz')
+    # Read GRB correlations
+    grb_data = read_grb_data(DATA_DIR / 'GRB_Summary_table.txt')
+    grb_synth_fit = np.load(DATA_DIR / f'synthetic_grb_correlation_CLCF_gamma_fit_{suffix}.npz')
 
-    # Plot 2σ region on top
-    plt.fill_between(ell[1:], 
-                        np.maximum(1e-16, cl_2sigma_lower[1:]), 
-                        cl_2sigma_upper[1:], 
-                        alpha=0.35, color='black')
+    # Use the same theta values for all plots
+    theta_degs = np.arange(1, CL_LMAX + 1)
 
-    # Plot 1σ region on top
-    plt.fill_between(ell[1:], 
-                        np.maximum(1e-16, cl_1sigma_lower[1:]), 
-                        cl_1sigma_upper[1:], 
-                        alpha=0.5, color='black')
+    fig, axes = plt.subplots(2, 1, figsize=(SINGLE, 4.2), sharex=True, sharey=True)
 
-    plt.plot(ell[1:], cl_mean[1:],  label=f'Synthetic GW')
-    plt.plot(ell[1:], hp.anafast(observed_map, lmax=lmax)[1:], label='Observed GW')
-    plt.yscale('log')
-    plt.xlabel(r'Multipole moment $\ell$')
-    plt.ylabel(r'Angular Power Spectrum $C_\ell$')
-    plt.title(f'Angular Power Spectrum Comparison: Synthetic vs Observed')
-    plt.legend()
-    plt.grid(True, which='both', ls='--', lw=0.5)
-    plt.tight_layout()
-    plt.show()
-    return fig
+    plot_gw_correlation(gw_skymap, gw_synth_fit['gw_CL_gamma_fit'], theta_degs, axes[0])
+    plot_grb_correlation(grb_data, grb_synth_fit, theta_degs, axes[1])
+    axes[1].set_xlim(0, CL_LMAX + 0.5)
+
+    suffix = ''
+    if USE_GAMMA_FIT:
+        suffix += '_gammafit'
+    fig.savefig(FIG_DIR / f"Fig5_power_spectrum{suffix}.pdf", dpi=DPI)
+    return fig, axes
 
 
-if __name__ == "__main__":
-    fig = main()
+if __name__ == '__main__':
+    fig, axes = main()
