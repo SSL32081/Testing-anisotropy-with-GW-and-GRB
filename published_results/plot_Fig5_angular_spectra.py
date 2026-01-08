@@ -8,8 +8,6 @@ from utils import DATA_DIR, FIG_DIR, SINGLE, DPI, NSIDE, \
     read_grb_data, compute_skymap_from_points
 import healpy as hp
 
-NPIX = hp.nside2npix(NSIDE)
-
 parser = argparse.ArgumentParser(description='Options for computing the gamma fit of synthetic data.')
 parser.add_argument('--gammafit', action='store_true',
                     help='Whether to use gamma fit results for plotting.')
@@ -118,23 +116,20 @@ def plot_grb_correlation(grb_data, grb_synth_stats, ells, ax):
 
 
 def main():
-    # This simply helps to choose the correct filename suffixes
-    suffix = "n180_lmax128_windowed"
-
     # Read GW correlations
     gw_skymap = np.load(DATA_DIR / 'GWTC4p0_combined_galactic_skymap.npy')
-    gw_synth_fit = np.load(DATA_DIR / f'synthetic_gw_correlation_CLCF_gamma_fit_{suffix}.npz')
+    gw_synth_fit = np.load(DATA_DIR / f'synthetic_gw_correlation_CLCF_gamma_fit_n180_lmax128_windowed.npz')
     # Read GRB correlations
     grb_data = read_grb_data(DATA_DIR / 'GRB_Summary_table.txt')
-    grb_synth_fit = np.load(DATA_DIR / f'synthetic_grb_correlation_CLCF_gamma_fit_{suffix}.npz')
+    grb_synth_fit = np.load(DATA_DIR / f'synthetic_grb_correlation_CLCF_gamma_fit_n180_lmax128_windowed.npz')
 
-    # Use the same theta values for all plots
-    theta_degs = np.arange(1, CL_LMAX + 1)
+    # Use the same ell range for all plots
+    ell_range = np.arange(1, CL_LMAX + 1)
 
     fig, axes = plt.subplots(2, 1, figsize=(SINGLE, 4.2), sharex=True, sharey=True)
 
-    plot_gw_correlation(gw_skymap, gw_synth_fit['gw_CL_gamma_fit'], theta_degs, axes[0])
-    plot_grb_correlation(grb_data, grb_synth_fit, theta_degs, axes[1])
+    plot_gw_correlation(gw_skymap, gw_synth_fit['gw_CL_gamma_fit'], ell_range, axes[0])
+    plot_grb_correlation(grb_data, grb_synth_fit, ell_range, axes[1])
     axes[1].set_xlim(0, CL_LMAX + 0.5)
 
     suffix = ''
