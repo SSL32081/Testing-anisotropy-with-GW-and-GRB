@@ -65,7 +65,7 @@ def add_healpy_mollweide_ax(fig, ax):
     return ax
 
 
-def read_synthetic_GW_skymap(idx, nside=NSIDE):
+def read_synthetic_gw_skymap(idx, nside=NSIDE):
     fit_file = SYN_O4A_FITS_DIR / f'H1L1_{idx}_galactic.fits.gz'
     skymap = hp.read_map(fit_file, nest=False)
     skymap_resized = hp.ud_grade(skymap, nside, power=-2)

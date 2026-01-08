@@ -20,12 +20,12 @@ def mp_gamma_fit(synth_data):
 
 def main():
     # Read synthetic data
-    gw_synth_data = np.load(DATA_DIR / 'congregated_synthetic_GW_correlation_stats_n360.npz')
+    gw_synth_data = np.load(DATA_DIR / 'congregated_synthetic_gw_correlation_stats_1000_85_ellmax_128_n1000.npy')
     grb_synth_data = np.load(DATA_DIR / 'congregated_synthetic_grb_correlation_stats_n1000.npz')
 
     print('(Multi-)Processing gamma fit for synthetic GW correlations...')
     gw_fit_results = mp_gamma_fit(gw_synth_data['angular_spectrum'].T)
-    np.save(DATA_DIR / 'synthetic_GW_correlation_stats_gamma_fit.npy', gw_fit_results)
+    np.save(DATA_DIR / 'synthetic_gw_correlation_stats_gamma_fit.npy', gw_fit_results)
 
     print('(Multi-)Processing gamma fit for synthetic GRB correlations...')
     print('  - Full GRB sample')
