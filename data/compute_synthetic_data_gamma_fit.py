@@ -10,13 +10,13 @@ from utils import DATA_DIR, compute_correlation_function
 def _gamma_fit(synth_data_row):
     scale = 1e12  # Regularising values for better fitting.
     fitted_params = gamma.fit(synth_data_row * scale, method='MLE')
-    return gamma.mean(*fitted_params) / scale, gamma.std(*fitted_params) / scale
+    return gamma.mean(*fitted_params) / scale, gamma.std(*fitted_params) / scale, np.mean(synth_data_row), np.std(synth_data_row)
 
 
 def mp_gamma_fit(synth_data):
     with Pool(processes=20) as pool:
         results = pool.map(_gamma_fit, synth_data)
-    return np.array(results, dtype=[('mean', 'f8'), ('std', 'f8')])
+    return np.array(results, dtype=[('gamma_mean', 'f8'), ('gamma_std', 'f8'), ('mean', 'f8'), ('std', 'f8')])
 
 
 def recompute_correlation_function(cl_data, cf_data, nthetas=500):
@@ -32,6 +32,7 @@ def recompute_correlation_function(cl_data, cf_data, nthetas=500):
 
 
 def main():
+    NTHETAS = 180
     # Read synthetic data
     gw_synth_data = np.load(DATA_DIR / 'congregated_synthetic_gw_correlation_stats_1000_85_ellmax_128_n1000.npy')
     print('(Multi-)Processing gamma fit for synthetic GW correlations...')
@@ -39,7 +40,7 @@ def main():
         recompute_correlation_function(
             gw_synth_data['multipole_spectrum'],
             gw_synth_data['angular_spectrum'],
-            nthetas=500
+            nthetas=NTHETAS
         )
     )
     np.save(DATA_DIR / 'synthetic_gw_correlation_CF_gamma_fit.npy', gw_fit_results)
@@ -53,7 +54,7 @@ def main():
             recompute_correlation_function(
                 grb_synth_data[f'{grb_type}_multipole_spectrum'],
                 grb_synth_data[f'{grb_type}_angular_spectrum'],
-                nthetas=500
+                nthetas=NTHETAS
             )
         )
 
