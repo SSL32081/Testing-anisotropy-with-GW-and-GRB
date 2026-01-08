@@ -3,6 +3,8 @@
 
 # Ignore GRB simulated data intermediates
 data/simulated_grbs/
+# Ignore condor logs
+**condor_logs/
 
 # Vim / Editor
 *.swp
