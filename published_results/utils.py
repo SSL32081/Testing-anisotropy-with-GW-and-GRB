@@ -24,6 +24,11 @@ SINGLE = 4.1  # inches, single column fig width
 DOUBLE = 8.3  # inches, double column fig width
 DPI = 450  # figure dpi
 
+# ell max to use for different purposes
+CL_LMAX = 26
+CF_LMAX = 128
+LMAX = max(CF_LMAX, CL_LMAX)
+
 # This is the nside that all GW skymaps are resized to
 NSIDE = 256
 
@@ -100,18 +105,22 @@ def compute_skymap_from_points(l_rad, b_rad, nside):
     return counts / counts.sum()
 
 
-def compute_correlation_function(cl, thetas, lmax):
+def compute_correlation_function(cl, thetas, lmax, lmax_res=26, windowed=True):
     """
     Compute angular correlation function C(θ) from Cℓ.
     
     Formula: C(θ) = 1/(4π) * Σ_{ℓ=0}^{ℓmax} (2ℓ+1) Cℓ Pℓ(cos θ)
     """
+    resolution = 1 / lmax_res
     ells = np.arange(lmax + 1)
     cos_theta = np.cos(thetas)
-    C_theta = np.zeros_like(thetas, dtype=np.float64)
+    cf_theta = np.zeros_like(thetas, dtype=np.float64)
     
     for ell in ells:
         # Legendre polynomial Pℓ(cos θ)
-        C_theta += (2 * ell + 1) * cl[ell] * lpmv(0, ell, cos_theta)
+        _cf_theta = (2 * ell + 1) * cl[ell] * lpmv(0, ell, cos_theta)
+        if windowed:
+            _cf_theta *= np.exp(-ell * (ell + 1) * (resolution ** 2))
+        cf_theta += _cf_theta
     
-    return C_theta / (4 * np.pi)
+    return cf_theta / (4 * np.pi)

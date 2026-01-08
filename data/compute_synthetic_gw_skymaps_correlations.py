@@ -52,7 +52,7 @@ def get_synthetic_gw_correlations(n_sims=N_SIMS, n_events=N_EVENTS):
 if __name__ == "__main__":
     thetas = np.linspace(0.0, np.pi, int(1000))
     gw_synth_skymap_stats = get_synthetic_gw_correlations()
-    np.save(DATA_DIR / f"congregated_synthetic_gw_correlation_stats_{N_SIMS:d}_{N_EVENTS:d}_ellmax_{LMAX:d}_n{thetas.size:d}.npy",
+    np.save(DATA_DIR / f"congregated_synthetic_gw_correlation_stats_{N_SIMS:d}_{N_EVENTS:d}_lmax{LMAX:d}_n{thetas.size:d}.npy",
             gw_synth_skymap_stats)
     # Note on 2025/01/05: The accumulated skymap is no longer needed.
     # Note on 2026/01/08: Update to save as npy.

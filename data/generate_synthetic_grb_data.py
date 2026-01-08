@@ -5,10 +5,11 @@ import astropy.units as u
 import healpy as hp
 from scipy.optimize import curve_fit
 from scipy.stats import norm
+from multiprocessing import Pool
 
 import sys
 sys.path.append('../published_results/')
-from utils import DATA_DIR, NSIDE, read_grb_data, \
+from utils import DATA_DIR, NSIDE, CF_LMAX, read_grb_data, \
     compute_correlation_function, compute_skymap_from_points
 
 # Initialize output structured array
@@ -16,7 +17,6 @@ keys = ('ra', 'dec', 'l_gal', 'b_gal', 'duration')
 dtypes = [(key, 'f8') for key in keys]
 dtypes.append(('flag', 'S1'))
 
-LMAX = 26
 N_realisations = 100
 thetas = np.linspace(0.0, np.pi, int(1e3))
 ntheta = thetas.size
@@ -114,38 +114,46 @@ def get_grb_skymaps_and_spectra(full_grb_data):
     skymap_long = compute_skymap_from_points(long_grbs['l_gal'], long_grbs['b_gal'], nside=NSIDE)
 
     # Compute angular power spectra
-    cl_full = hp.anafast(skymap_full, lmax=LMAX) 
-    cl_short = hp.anafast(skymap_short, lmax=LMAX)
-    cl_long = hp.anafast(skymap_long, lmax=LMAX)
+    cl_full = hp.anafast(skymap_full, lmax=CF_LMAX) 
+    cl_short = hp.anafast(skymap_short, lmax=CF_LMAX)
+    cl_long = hp.anafast(skymap_long, lmax=CF_LMAX)
 
     # Compute auto-correlation functions
-    Ctheta_full = compute_correlation_function(cl_full, thetas, LMAX)
-    Ctheta_short = compute_correlation_function(cl_short, thetas, LMAX)
-    Ctheta_long = compute_correlation_function(cl_long, thetas, LMAX)
+    Ctheta_full = compute_correlation_function(cl_full, thetas, CF_LMAX)
+    Ctheta_short = compute_correlation_function(cl_short, thetas, CF_LMAX)
+    Ctheta_long = compute_correlation_function(cl_long, thetas, CF_LMAX)
 
     return cl_full, cl_short, cl_long, Ctheta_full, Ctheta_short, Ctheta_long
 
 
-def main():
-    np.random.seed(42)  # For reproducibility
-
+def process_single_realisation(idx):
     grb_data = read_grb_data(DATA_DIR / "GRB_Summary_table.txt")
     coeff = fit_real_grb_data(grb_data)
 
-    all_correlations = [[] for _ in range(6)] 
-    for idx in range(N_realisations):
-        simulated_grbs = generate_synthetic_grb_data(coeff, grb_data.size)
-        correlations = get_grb_skymaps_and_spectra(simulated_grbs)
-        keys = ('cl_full', 'cl_short', 'cl_long', 'Ctheta_full', 'Ctheta_short', 'Ctheta_long')
-        np.savez(DATA_DIR / f'simulated_grbs/simulated_grbs_realisation_n{ntheta:d}_{idx:d}.npz', 
-                 simulated_grbs=simulated_grbs, **dict(zip(keys, correlations)))
-        for accumulator, element in zip(all_correlations, correlations):
-            accumulator.append(element)
-    all_correlations = [np.array(corr) for corr in all_correlations]
-    keys = ('full_mulipole_spectrum', 'short_multipole_spectrum', 'long_multipole_spectrum',
-            'full_angular_spectrum', 'short_angular_spectrum', 'long_angular_spectrum')
-    np.savez(DATA_DIR / f'congregated_synthetic_grb_correlation_stats_n{ntheta:d}.npz',
-            **dict(zip(keys, all_correlations)))
+    np.random.seed()
+    simulated_grbs = generate_synthetic_grb_data(coeff, grb_data.size)
+    correlations = get_grb_skymaps_and_spectra(simulated_grbs)
+    keys = ('cl_full', 'cl_short', 'cl_long', 'Ctheta_full', 'Ctheta_short', 'Ctheta_long')
+    np.savez(DATA_DIR / f'simulated_grbs/simulated_grbs_realisation_n{ntheta:d}_{idx:d}.npz', 
+                simulated_grbs=simulated_grbs, **dict(zip(keys, correlations)))
+    return correlations
+
+def main():
+    with Pool(processes=20) as pool:
+        all_correlations = pool.map(process_single_realisation, range(N_realisations))
+
+    dtypes = [
+        ('full_multipole_spectrum', 'f8', (CF_LMAX + 1,)),
+        ('short_multipole_spectrum', 'f8', (CF_LMAX + 1,)),
+        ('long_multipole_spectrum', 'f8', (CF_LMAX + 1,)),
+        ('full_angular_spectrum', 'f8', (ntheta,)),
+        ('short_angular_spectrum', 'f8', (ntheta,)),
+        ('long_angular_spectrum', 'f8', (ntheta,))
+    ]
+
+    np.save(DATA_DIR / f"congregated_synthetic_grb_correlation_stats_{N_realisations:d}_lmax{CF_LMAX:d}_n{ntheta:d}.npy",            
+        np.array(all_correlations, dtype=dtypes)
+    )
 
 if __name__ == "__main__":
     main()
