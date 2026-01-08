@@ -9,10 +9,6 @@ from utils import DATA_DIR
 
 def _gamma_fit(synth_data_row):
     scale = 1e12  # Regularising values for better fitting.
-    mean = np.mean(synth_data_row)
-    var = np.var(synth_data_row)
-    scale = mean / var
-    loc = mean * scale
     fitted_params = gamma.fit(synth_data_row * scale, method='MLE')
     return gamma.mean(*fitted_params) / scale, gamma.std(*fitted_params) / scale
 
@@ -24,7 +20,7 @@ def mp_gamma_fit(synth_data):
 
 def main():
     # Read synthetic data
-    gw_synth_data = np.load(DATA_DIR / 'congregated_synthetic_GW_correlation_stats.npz')
+    gw_synth_data = np.load(DATA_DIR / 'congregated_synthetic_GW_correlation_stats_n360.npz')
     grb_synth_data = np.load(DATA_DIR / 'congregated_synthetic_grb_correlation_stats_n1000.npz')
 
     print('(Multi-)Processing gamma fit for synthetic GW correlations...')
