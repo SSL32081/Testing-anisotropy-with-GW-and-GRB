@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from h5py import File
+import argparse
 import numpy as np
 import numpy.lib.recfunctions as rfn
 from scipy.stats import chi2
@@ -7,7 +8,17 @@ import matplotlib.pyplot as plt
 
 from utils import PARENT_DIR, FIG_DIR, DPI, SINGLE
 
-N_realisations = 500
+parser = argparse.ArgumentParser(
+    description='Options for computing the gamma fit of synthetic data.')
+parser.add_argument('-n', type=int, default=500,
+                    help='Number of realisations to draw.')
+parser.add_argument('--errors', action='store_true', 
+                    help='Whether to plot error bars on the histogram.')
+parser.add_argument('--nocosmo', action='store_false',
+                    help='Whether to use cosmology-corrected mass samples.')
+
+args = parser.parse_args()
+N_realisations = args.n
 
 def read_skyloc_mass_samples(skyloc_file, mass_file):
     subkeys = ['ra', 'dec', 'chirp_mass']
@@ -61,9 +72,10 @@ def get_poisson_err(counts, alpha=0.10):
     return np.where(counts > 0, err, np.nan)
 
 
-def plot_hist(samples, ax_dec, ax_ra):
-    Mc = samples['chirp_mass']
-    bins = np.linspace(np.min(Mc) - 3, np.max(Mc) + 3, 51)
+def plot_hist(samples, ax_dec, ax_ra, plot_err=False):
+    # Mc = samples['chirp_mass']
+    # bins = np.linspace(np.min(Mc) - 3, np.max(Mc) + 3, 51)
+    bins = np.arange(0, 121, 5)
     centres = (bins[:-1] + bins[1:]) / 2
 
     pos_counts, neg_counts = [], []
@@ -82,9 +94,10 @@ def plot_hist(samples, ax_dec, ax_ra):
     pos_count = np.sum(pos_counts) / N_realisations
     neg_count = np.sum(neg_counts) / N_realisations
 
-    ax.step(centres, pos_counts_stats[1], where='mid', 
-            label=fr'Forward hemisphere ($N^{{\rm F}}={pos_count:.2f}$)')
-    ax.step(centres, neg_counts_stats[1], ls='--', where='mid', 
+    ax.stairs(pos_counts_stats[1], bins, hatch='//', color='C0',
+            label=fr'Forward hemisphere ($N^{{\rm F}}={pos_count:.2f}$)',
+            zorder=5)
+    ax.stairs(neg_counts_stats[1], bins, ls='--', hatch='\\\\', color='C1',
             label=fr'Backward hemisphere ($N^{{\rm B}}={neg_count:.2f}$)')
 
     ax.fill_between(
@@ -95,6 +108,14 @@ def plot_hist(samples, ax_dec, ax_ra):
             centres, neg_counts_stats[0], neg_counts_stats[2],
             alpha=0.5, color='C1', step='mid', lw=0,
         )
+    if plot_err:
+        err_kws = dict(fmt='none', capsize=2, zorder=10, alpha=0.7, linewidth=0.8)
+        ax.errorbar(centres - 0.5, pos_counts_stats[1], 
+                    yerr=get_poisson_err(pos_counts_stats[1]),
+                    color='C0', **err_kws)
+        ax.errorbar(centres + 0.5, neg_counts_stats[1], 
+                    yerr=get_poisson_err(neg_counts_stats[1]),
+                    color='C1', **err_kws)
     ax.legend()
     ax.set_ylim(bottom=0)
     ax.set_xlim(0, 120)
@@ -107,7 +128,8 @@ def plot_hist(samples, ax_dec, ax_ra):
 
 
 def main():
-    cosmo_txt = 'nocosmo'
+    cosmo_txt = 'cosmo' if args.nocosmo else 'nocosmo'
+    errorbars = args.errors
     RA_D, DEC_D = 167.942, -6.944
     ax_dec, ax_ra = np.deg2rad(90.0 - DEC_D), np.deg2rad(RA_D)
 
@@ -128,8 +150,9 @@ def main():
     ], axis=1)
     print(all_samples.shape)
 
-    fig = plot_hist(all_samples, ax_dec, ax_ra)
-    fig.savefig(FIG_DIR / f'Fig8_dipole_mass_{cosmo_txt}_distribution.pdf', dpi=DPI)
+    fig = plot_hist(all_samples, ax_dec, ax_ra, plot_err=errorbars)
+    suffix = '_with_err' if errorbars else ''
+    fig.savefig(FIG_DIR / f'Fig8_dipole_mass_{cosmo_txt}_distribution{suffix}.pdf', dpi=DPI)
     return fig
 
 
