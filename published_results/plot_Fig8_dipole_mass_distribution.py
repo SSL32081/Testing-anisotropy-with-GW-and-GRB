@@ -36,19 +36,20 @@ def read_skyloc_mass_samples(skyloc_file, mass_file):
                     print(f"Missing C00 or C01 group for event {event}")
                     continue
 
+            if skyloc_group.size < 1000:
+                print(f"Not enough samples for event {event}: only {skyloc_group.size} samples")
+                continue
+
             names = list(skyloc_group.dtype.names)
             names.remove('redshift')
             if np.all(skyloc_group['redshift'] == mass_group['redshift']):
                 skyloc = skyloc_group[tuple(names)]
-                if skyloc.size < 1000:
-                    print(f"Not enough samples for event {event}: only {skyloc.size} samples")
-                    continue
                 merged = rfn.merge_arrays(
                     [skyloc, mass_group], usemask=False, flatten=True)
                 merged['chirp_mass'] /= (1 + merged['redshift'])
-                sub_arr = merged[subkeys]
                 subsamples = np.vstack([
-                    np.random.choice(sub_arr, size=1000, replace=False) for _ in range(N_realisations)
+                    np.random.choice(merged[subkeys], size=1000, replace=False) 
+                        for _ in range(N_realisations)
                 ])
                 all_samples = np.concatenate([all_samples, subsamples], axis=1)
             else:
