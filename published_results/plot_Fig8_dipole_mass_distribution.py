@@ -21,6 +21,10 @@ args = parser.parse_args()
 N_realisations = args.n
 N_samples = 1000
 
+# Copied from Fig9 script
+color_F   = '#e66101'   # warm orange for forward hemisphere
+color_B   = '#5e3c99'   # deep violet for backward hemisphere
+
 def read_skyloc_mass_samples(skyloc_file, mass_file):
     subkeys = ['ra', 'dec', 'chirp_mass']
     all_samples = np.array([[]] * N_realisations, dtype=[(key, 'f8') for key in subkeys])
@@ -96,28 +100,28 @@ def plot_hist(samples, ax_dec, ax_ra, plot_err=False):
     pos_count = np.sum(pos_counts) / N_realisations
     neg_count = np.sum(neg_counts) / N_realisations
 
-    ax.stairs(pos_counts_stats[1], bins, hatch='//', color='C0',
+    ax.stairs(pos_counts_stats[1], bins, hatch='//', color=color_F,
             label=fr'Forward hemisphere ($N^{{\rm F}}={pos_count:.2f}$)',
             zorder=5)
-    ax.stairs(neg_counts_stats[1], bins, ls='-', hatch='\\\\', color='C1',
+    ax.stairs(neg_counts_stats[1], bins, ls='-', hatch='\\\\', color=color_B,
             label=fr'Backward hemisphere ($N^{{\rm B}}={neg_count:.2f}$)')
 
     ax.fill_between(
             centres, pos_counts_stats[0], pos_counts_stats[2],
-            alpha=0.5, color='C0', step='mid', lw=0,
+            alpha=0.5, color=color_F, step='mid', lw=0,
         )
     ax.fill_between(
             centres, neg_counts_stats[0], neg_counts_stats[2],
-            alpha=0.5, color='C1', step='mid', lw=0,
+            alpha=0.5, color=color_B, step='mid', lw=0,
         )
     if plot_err:
         err_kws = dict(fmt='none', capsize=2, zorder=10, alpha=0.7, linewidth=0.8)
         ax.errorbar(centres - 0.5, pos_counts_stats[1], 
                     yerr=get_poisson_err(pos_counts_stats[1]),
-                    color='C0', **err_kws)
+                    color=color_F, **err_kws)
         ax.errorbar(centres + 0.5, neg_counts_stats[1], 
                     yerr=get_poisson_err(neg_counts_stats[1]),
-                    color='C1', **err_kws)
+                    color=color_B, **err_kws)
     ax.legend()
     ax.set_ylim(bottom=0)
     ax.set_xlim(0, 120)
