@@ -19,6 +19,7 @@ parser.add_argument('--nocosmo', action='store_false',
 
 args = parser.parse_args()
 N_realisations = args.n
+N_samples = 1000
 
 def read_skyloc_mass_samples(skyloc_file, mass_file):
     subkeys = ['ra', 'dec', 'chirp_mass']
@@ -36,7 +37,7 @@ def read_skyloc_mass_samples(skyloc_file, mass_file):
                     print(f"Missing C00 or C01 group for event {event}")
                     continue
 
-            if skyloc_group.size < 1000:
+            if skyloc_group.size < N_samples:
                 print(f"Not enough samples for event {event}: only {skyloc_group.size} samples")
                 continue
 
@@ -48,7 +49,7 @@ def read_skyloc_mass_samples(skyloc_file, mass_file):
                     [skyloc, mass_group], usemask=False, flatten=True)
                 merged['chirp_mass'] /= (1 + merged['redshift'])
                 subsamples = np.vstack([
-                    np.random.choice(merged[subkeys], size=1000, replace=False) 
+                    np.random.choice(merged[subkeys], size=N_samples, replace=False) 
                         for _ in range(N_realisations)
                 ])
                 all_samples = np.concatenate([all_samples, subsamples], axis=1)
@@ -84,8 +85,8 @@ def plot_hist(samples, ax_dec, ax_ra, plot_err=False):
         labels = assign_hemispheres(realisation, ax_dec, ax_ra)
         pos_count, _ = np.histogram(realisation['chirp_mass'][labels == +1], bins=bins)
         neg_count, _ = np.histogram(realisation['chirp_mass'][labels == -1], bins=bins)
-        pos_counts.append(pos_count / 1000)
-        neg_counts.append(neg_count / 1000)
+        pos_counts.append(pos_count / N_samples)
+        neg_counts.append(neg_count / N_samples)
 
     fig, ax = plt.subplots(figsize=(SINGLE, 3.1))
 
@@ -98,7 +99,7 @@ def plot_hist(samples, ax_dec, ax_ra, plot_err=False):
     ax.stairs(pos_counts_stats[1], bins, hatch='//', color='C0',
             label=fr'Forward hemisphere ($N^{{\rm F}}={pos_count:.2f}$)',
             zorder=5)
-    ax.stairs(neg_counts_stats[1], bins, ls='--', hatch='\\\\', color='C1',
+    ax.stairs(neg_counts_stats[1], bins, ls='-', hatch='\\\\', color='C1',
             label=fr'Backward hemisphere ($N^{{\rm B}}={neg_count:.2f}$)')
 
     ax.fill_between(
@@ -153,7 +154,7 @@ def main():
 
     fig = plot_hist(all_samples, ax_dec, ax_ra, plot_err=errorbars)
     suffix = '_with_err' if errorbars else ''
-    fig.savefig(FIG_DIR / f'Fig8_dipole_mass_{cosmo_txt}_distribution{suffix}.pdf', dpi=DPI)
+    fig.savefig(FIG_DIR / f'Fig8_dipole_mass_{cosmo_txt}_distribution{suffix}_N{N_samples:d}.pdf', dpi=DPI)
     return fig
 
 
