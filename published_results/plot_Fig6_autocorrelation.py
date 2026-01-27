@@ -51,7 +51,7 @@ def plot_gw_correlation(gw_skymap, gw_synth_stat, thetas, ax):
     ax.plot(thetas, C_theta_obs, 'C3', zorder=10, label='Observed GW Events')
 
     colour = 'k'
-    alpha_dict = { 1:  0.5, 2:  0.35, 3:  0.15 }
+    alpha_dict = {1: 0.5, 2: 0.35, 3: 0.15}
 
     thetas = np.linspace(0.0, 180.0, gw_synth_stat[mean_key].size)
     for n_sigma in reversed(range(1, 4)):
@@ -80,9 +80,9 @@ def plot_grb_correlation(grb_data, grb_synth_stats, thetas, ax):
         'long': grb_data[grb_data['duration'] >= 2.0]
     }
 
-    colour_dict = { 'full': 'grey', 'short': 'C1', 'long': 'C2' }
-    line_colour_dict = { 'full': 'k', 'short': 'darkorange', 'long': 'darkgreen' }
-    alpha_dict = { 1:  0.5, 2:  0.35, 3:  0.15 }
+    colour_dict = {'full': 'grey', 'short': 'C1', 'long': 'C2'}
+    line_colour_dict = {'full': 'k', 'short': 'darkorange', 'long': 'darkgreen'}
+    alpha_dict = {1: 0.5, 2: 0.35, 3: 0.15}
 
     for grb_type in ('full', 'short', 'long'):
         # Convert GRB data to HEALPix map
@@ -179,7 +179,9 @@ def main():
     fig, axes = plt.subplots(3, 1, figsize=(SINGLE, 7),
                              sharex=True, height_ratios=[1, 1.5, 1])
 
-    plot_gw_correlation(gw_skymap, gw_synth_fit['gw_CF_gamma_fit'], theta_degs, axes[0])
+    plot_gw_correlation(
+        gw_skymap, gw_synth_fit['gw_CF_gamma_fit'], theta_degs, axes[0]
+    )
     plot_grb_correlation(grb_data, grb_synth_fit, theta_degs, axes[1])
     plot_glade_correlation(glade_data, theta_degs, axes[2])
     axes[2].set_xlim(0, 180)

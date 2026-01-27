@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser(
     description='Options for computing the gamma fit of synthetic data.')
 parser.add_argument('-n', type=int, default=500,
                     help='Number of realisations to draw.')
-parser.add_argument('--errors', action='store_true', 
+parser.add_argument('--errors', action='store_true',
                     help='Whether to plot error bars on the histogram.')
 parser.add_argument('--nocosmo', action='store_false',
                     help='Whether to use cosmology-corrected mass samples.')
@@ -22,12 +22,14 @@ N_realisations = args.n
 N_samples = 1000
 
 # Copied from Fig9 script
-color_F   = '#e66101'   # warm orange for forward hemisphere
-color_B   = '#5e3c99'   # deep violet for backward hemisphere
+color_F = '#e66101'   # warm orange for forward hemisphere
+color_B = '#5e3c99'   # deep violet for backward hemisphere
+
 
 def read_skyloc_mass_samples(skyloc_file, mass_file):
     subkeys = ['ra', 'dec', 'chirp_mass']
-    all_samples = np.array([[]] * N_realisations, dtype=[(key, 'f8') for key in subkeys])
+    all_samples = np.array([[]] * N_realisations,
+                           dtype=[(key, 'f8') for key in subkeys])
     with File(skyloc_file, 'r') as f_skyloc, File(mass_file, 'r') as f_mass:
         for event in f_skyloc.keys():
             try:
@@ -53,8 +55,8 @@ def read_skyloc_mass_samples(skyloc_file, mass_file):
                     [skyloc, mass_group], usemask=False, flatten=True)
                 merged['chirp_mass'] /= (1 + merged['redshift'])
                 subsamples = np.vstack([
-                    np.random.choice(merged[subkeys], size=N_samples, replace=False) 
-                        for _ in range(N_realisations)
+                    np.random.choice(merged[subkeys], size=N_samples, replace=False)
+                    for _ in range(N_realisations)
                 ])
                 all_samples = np.concatenate([all_samples, subsamples], axis=1)
             else:
@@ -101,25 +103,25 @@ def plot_hist(samples, ax_dec, ax_ra, plot_err=False):
     neg_count = np.sum(neg_counts) / N_realisations
 
     ax.stairs(pos_counts_stats[1], bins, hatch='//', color=color_F,
-            label=fr'Forward hemisphere ($N^{{\rm F}}={pos_count:.2f}$)',
-            zorder=5)
+              label=fr'Forward hemisphere ($N^{{\rm F}}={pos_count:.2f}$)',
+              zorder=5)
     ax.stairs(neg_counts_stats[1], bins, ls='-', hatch='\\\\', color=color_B,
-            label=fr'Backward hemisphere ($N^{{\rm B}}={neg_count:.2f}$)')
+              label=fr'Backward hemisphere ($N^{{\rm B}}={neg_count:.2f}$)')
 
     ax.fill_between(
-            centres, pos_counts_stats[0], pos_counts_stats[2],
-            alpha=0.5, color=color_F, step='mid', lw=0,
-        )
+        centres, pos_counts_stats[0], pos_counts_stats[2],
+        alpha=0.5, color=color_F, step='mid', lw=0,
+    )
     ax.fill_between(
-            centres, neg_counts_stats[0], neg_counts_stats[2],
-            alpha=0.5, color=color_B, step='mid', lw=0,
-        )
+        centres, neg_counts_stats[0], neg_counts_stats[2],
+        alpha=0.5, color=color_B, step='mid', lw=0,
+    )
     if plot_err:
         err_kws = dict(fmt='none', capsize=2, zorder=10, alpha=0.7, linewidth=0.8)
-        ax.errorbar(centres - 0.5, pos_counts_stats[1], 
+        ax.errorbar(centres - 0.5, pos_counts_stats[1],
                     yerr=get_poisson_err(pos_counts_stats[1]),
                     color=color_F, **err_kws)
-        ax.errorbar(centres + 0.5, neg_counts_stats[1], 
+        ax.errorbar(centres + 0.5, neg_counts_stats[1],
                     yerr=get_poisson_err(neg_counts_stats[1]),
                     color=color_B, **err_kws)
     ax.legend()

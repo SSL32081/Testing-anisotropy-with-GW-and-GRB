@@ -73,10 +73,12 @@ def main():
     axes = fig.axes
     axes[0].set_title(rf'GWTC-4 GW Localization Skymap ($\ell \leq {CL_LMAX}$)')
     plot_colourbar(fig, axes[0], im0,
-                   label=r'Rescaled Probability Density' + '\n' +r'$M_\text{GW}\left(\chi, \phi\right)$')
+                   label=r'Rescaled Probability Density' + '\n' +
+                           r'$M_\text{GW}\left(\chi, \phi\right)$')
     axes[1].set_title(rf'GRB Event Density Skymap ($\ell \leq {CL_LMAX}$)')
     plot_colourbar(fig, axes[1], im1,
-                   label=r'Normalized Event Density' + '\n' + r'$M_\text{GRB}\left(\chi, \phi\right)$')
+                   label=r'Normalized Event Density' + '\n' +
+                           r'$M_\text{GRB}\left(\chi, \phi\right)$')
 
     fig.tight_layout()
     fig.savefig(FIG_DIR / 'Fig4_GWnGRB_harmonics_lmax26.pdf',

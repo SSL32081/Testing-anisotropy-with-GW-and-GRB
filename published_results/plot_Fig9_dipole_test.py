@@ -74,11 +74,11 @@ def main():
 
     # Left panel: Lambda posteriors
     ax1.plot(lambdas, post_I, color=color_iso,
-            label=r'$p(\lambda \mid N_{\rm F}, N_{\rm B})$')
+             label=r'$p(\lambda \mid N_{\rm F}, N_{\rm B})$')
     ax1.plot(lambdas, post_A_F, color=color_F,
-            label=r'$p(\lambda_{\rm F} \mid N_{\rm F})$')
+             label=r'$p(\lambda_{\rm F} \mid N_{\rm F})$')
     ax1.plot(lambdas, post_A_B, color=color_B,
-            label=r'$p(\lambda_{\rm B} \mid N_{\rm B})$')
+             label=r'$p(\lambda_{\rm B} \mid N_{\rm B})$')
 
     ax1.set_xlim(40, 150)
     ax1.set_ylim(bottom=0)
@@ -87,15 +87,14 @@ def main():
     ax1.legend(frameon=True, edgecolor='black')
 
     # Right panel: Beta posterior with CMB dipole
-    ax2.hist(beta_samp, bins=80, density=True,color=color_beta, alpha=0.65,
-            edgecolor='none', label=r'$p(\beta \mid N_{\rm F}, N_{\rm B})$')
-    ax2.axvline(beta_cmb, color=color_cmb, linewidth=1.5, linestyle='--', 
+    ax2.hist(beta_samp, bins=80, density=True, color=color_beta, alpha=0.65,
+             edgecolor='none', label=r'$p(\beta \mid N_{\rm F}, N_{\rm B})$')
+    ax2.axvline(beta_cmb, color=color_cmb, linewidth=1.5, linestyle='--',
                 label=f'$\\beta = {beta_cmb:.4f}$')
 
     # Just median + shaded region (cleaner look)
     ax2.axvspan(q_05, q_95, alpha=0.15, color=color_beta, zorder=0)
-    ax2.axvline(q_50, color='#1a252f', linewidth=1.2, linestyle='-')#, 
-                #label=f'Median: {q_50:.4f}\n90% CI: [{q_05:.4f}, {q_95:.4f}]')
+    ax2.axvline(q_50, color='#1a252f', linewidth=1.2, linestyle='-')
 
     ax2.set_xlabel(r'$\beta$')
     ax2.set_ylabel(r'$p(\beta \mid N_{\rm F}, N_{\rm B})$')
@@ -106,3 +105,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

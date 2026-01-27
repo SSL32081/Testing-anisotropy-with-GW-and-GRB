@@ -26,14 +26,16 @@ def main():
 
     for grb_type in ('all', 'short', 'long'):
         grb_dataset, colour, linestyle = obs_grb_dict[grb_type]
-        grb_map = compute_skymap_from_points(-grb_dataset['l_gal'], grb_dataset['b_gal'], NSIDE)
+        grb_map = compute_skymap_from_points(
+                -grb_dataset['l_gal'], grb_dataset['b_gal'], NSIDE)
         grb_map /= grb_map.sum()
         print("Computing angular power spectrum...")
         cross_cl = hp.anafast(gw_skymap, map2=grb_map, lmax=CF_LMAX)
         # Tested, this version does not make a difference:
         # cross_cl = hp.anafast(hp.alm2map(hp.map2alm(gw_skymap / gw_skymap.sum(), lmax=CF_LMAX), nside=NSIDE),
         #                       map2=hp.alm2map(hp.map2alm(grb_map, lmax=CF_LMAX), nside=NSIDE), lmax=CF_LMAX)
-        cross_cf = compute_correlation_function(cross_cl, theta_degs * np.pi / 180, CF_LMAX, windowed=True)
+        cross_cf = compute_correlation_function(
+            cross_cl, theta_degs * np.pi / 180, CF_LMAX, windowed=True)
 
         label = grb_type.capitalize() + ' GRB x GW'
         ax.plot(theta_degs, cross_cf, c=colour, linestyle=linestyle)
@@ -47,7 +49,7 @@ def main():
     for vis, path in zip((False, True, True, False), indicator[1]):
         path.set_visible(vis)
 
-    # Ticks 
+    # Ticks
     ax.set_xticks(30 * np.arange(7))
     ax2.set_xticks(30 * np.arange(7))
     ax2.minorticks_on()
@@ -57,7 +59,7 @@ def main():
     ax.set_xlabel(r'$\theta\,/\,{\rm deg}$')
     ax.set_ylabel(r'$C_{{\rm GW}\times{\rm GRB}}(\theta)$')
     ax.set_title('Angular cross-corelation between GW and GRB events')
-    
+
     # Shift the sci. notation text to the left
     exp = ax.yaxis.get_offset_text()
     exp.set_x(-0.09)

@@ -101,11 +101,5 @@ for ax in (axes[1], axes[4]):
     pos.x1 = mid_x + width / 2
     ax.set_position(pos)
 
-# cb_ax = axes[-1]
-# pos = deepcopy(cb_ax.get_position())
-# pos.y0 += 0.1
-# pos.y1 += 0.1
-# cb_ax.set_position(pos)
-
 fig.savefig(FIG_DIR / 'Fig3_spherical_decomposition.pdf',
             dpi=DPI, bbox_inches='tight')

@@ -37,7 +37,7 @@ def plot_gw_correlation(gw_skymap, gw_synth_stat, ells, ax):
             label='Observed GW Events', zorder=10)
 
     colour = 'k'
-    alpha_dict = { 1:  0.5, 2:  0.35, 3:  0.15 }
+    alpha_dict = {1: 0.5, 2: 0.35, 3: 0.15}
 
     means = gw_synth_stat[mean_key][1:CL_LMAX+1]
     std = gw_synth_stat[std_key][1:CL_LMAX+1]
@@ -136,7 +136,9 @@ def main():
     fig, axes = plt.subplots(2, 1, figsize=(SINGLE, 4.2),
                              sharex=True, sharey=True)
 
-    plot_gw_correlation(gw_skymap, gw_synth_fit['gw_CL_gamma_fit'], ell_range, axes[0])
+    plot_gw_correlation(
+        gw_skymap, gw_synth_fit['gw_CL_gamma_fit'], ell_range, axes[0]
+    )
     plot_grb_correlation(grb_data, grb_synth_fit, ell_range, axes[1])
     axes[1].set_xlim(0, CL_LMAX + 0.5)
 
