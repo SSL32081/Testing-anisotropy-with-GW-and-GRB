@@ -3,8 +3,8 @@ import numpy as np
 import argparse
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
-from utils import DATA_DIR, FIG_DIR, SINGLE, DPI, NSIDE, \
-    CL_LMAX, CF_LMAX, \
+from utils import CL_LMAX, DATA_DIR, KEY, FIG_DIR, SINGLE, DPI, \
+    NSIDE, CL_LMAX, CF_LMAX, \
     read_grb_data, compute_skymap_from_points
 import healpy as hp
 
@@ -124,7 +124,7 @@ def main():
     # Read GW correlations
     gw_skymap = np.load(DATA_DIR / 'GWTC4p0_combined_galactic_skymap.npy')
     gw_synth_fit = np.load(
-        DATA_DIR / 'synthetic_gw_correlation_CLCF_gamma_fit_n180_lmax128_windowed.npz')
+        DATA_DIR / f'synthetic_gw{KEY}_correlation_CLCF_gamma_fit_n180_lmax128_windowed.npz')
     # Read GRB correlations
     grb_data = read_grb_data(DATA_DIR / 'GRB_Summary_table.txt')
     grb_synth_fit = np.load(

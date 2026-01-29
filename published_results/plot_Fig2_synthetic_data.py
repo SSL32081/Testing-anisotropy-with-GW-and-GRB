@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import DATA_DIR, FIG_DIR, SINGLE, DPI, add_healpy_mollweide_ax
+from utils import DATA_DIR, N_SIMS, KEY, FIG_DIR, SINGLE, DPI, add_healpy_mollweide_ax
 from copy import deepcopy
 import healpy as hp
 from matplotlib.colors import LogNorm
@@ -89,7 +89,7 @@ def relocate_healpy_axes(ax, cb_ax, ref_ax_pos, ref_cb_ax_pos, shift):
 def main():
     # Observed GW skyloc maps
     gw_syn_map = np.load(
-        DATA_DIR / 'congregated_synthetic_gw_correlation_stats_1000_85_lmax128_n1000.npy')
+        DATA_DIR / f'congregated_synthetic_gw{KEY}_correlation_stats_{N_SIMS}_85_lmax128_n1000.npy')
     gw_syn_map = gw_syn_map['skymap'][0]
     # GRB locations
     grb_syn_data = np.load(

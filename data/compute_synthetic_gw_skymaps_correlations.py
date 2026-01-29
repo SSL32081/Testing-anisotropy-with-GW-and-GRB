@@ -4,12 +4,11 @@ import healpy as hp
 from multiprocessing import Pool
 import sys
 sys.path.append('../published_results/')
-from utils import DATA_DIR, NSIDE, CF_LMAX, read_synthetic_gw_skymap, \
-    compute_correlation_function
+from utils import DATA_DIR, NSIDE, CF_LMAX, N_SIMS, KEY, \
+    read_synthetic_gw_skymap, compute_correlation_function
 
 NPIX = hp.nside2npix(NSIDE)
 
-N_SIMS = 1000  # Total number of synthetic GW skymaps
 N_EVENTS = 85  # Number of GW events to simulate per synthetic skymap
 
 
@@ -51,7 +50,7 @@ def get_synthetic_gw_correlations(n_sims=N_SIMS, n_events=N_EVENTS):
 if __name__ == "__main__":
     thetas = np.linspace(0.0, np.pi, int(1000))
     gw_synth_skymap_stats = get_synthetic_gw_correlations()
-    np.save(DATA_DIR / f"congregated_synthetic_gw_correlation_stats_{N_SIMS:d}_{N_EVENTS:d}_lmax{CF_LMAX:d}_n{thetas.size:d}.npy",
+    np.save(DATA_DIR / f"congregated_synthetic_gw{KEY}_correlation_stats_{N_SIMS:d}_{N_EVENTS:d}_lmax{CF_LMAX:d}_n{thetas.size:d}.npy",
             gw_synth_skymap_stats)
     # Note on 2025/01/05: The accumulated skymap is no longer needed.
     # Note on 2026/01/08: Update to save as npy.

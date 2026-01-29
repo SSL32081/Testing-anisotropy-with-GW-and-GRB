@@ -5,14 +5,14 @@ from multiprocessing import Pool
 import argparse
 import sys
 sys.path.append('../published_results/')
-from utils import DATA_DIR, CF_LMAX, compute_correlation_function
+from utils import DATA_DIR, CF_LMAX, N_SIMS, KEY, compute_correlation_function
 
 parser = argparse.ArgumentParser(description='Options for computing the gamma fit of synthetic data.')
 parser.add_argument('--ntheta', type=int, default=180,
                     help='Number of theta bins for correlation function computation.')
 parser.add_argument('--lmax', type=int, default=CF_LMAX, 
                     help='Maximum multipole moment lmax for correlation function computation.')
-parser.add_argument('--nowindow', action='store_false',
+parser.add_argument('--nowindow', action='store_false', default=True, 
                     help='Whether to apply a resolution-limited window function in the correlation function computation.')
 
 
@@ -46,14 +46,14 @@ def main():
     args = parser.parse_args()
     NTHETAS = args.ntheta
     LMAX = args.lmax
-    WINDOWED = ~args.nowindow
+    WINDOWED = not args.nowindow
 
     suffix = f"n{NTHETAS:d}_lmax{LMAX:d}"
     if WINDOWED:
         suffix += "_windowed"
 
     # Read synthetic data
-    gw_synth_data = np.load(DATA_DIR / 'congregated_synthetic_gw_correlation_stats_1000_85_lmax128_n1000.npy')
+    gw_synth_data = np.load(DATA_DIR / f'congregated_synthetic_gw{KEY}_correlation_stats_{N_SIMS}_85_lmax128_n1000.npy')
     print('(Multi-)Processing gamma fit for synthetic GW correlations...')
     gw_gamma_fits = {}
     gw_gamma_fits['gw_CL_gamma_fit'] = mp_gamma_fit(
@@ -66,7 +66,7 @@ def main():
             lmax=LMAX, windowed=WINDOWED, nthetas=NTHETAS 
         )
     )
-    np.savez(DATA_DIR / f'synthetic_gw_correlation_CLCF_gamma_fit_{suffix}', **gw_gamma_fits)
+    np.savez(DATA_DIR / f'synthetic_gw{KEY}_correlation_CLCF_gamma_fit_{suffix}', **gw_gamma_fits)
 
     grb_synth_data = np.load(DATA_DIR / 'congregated_synthetic_grb_correlation_stats_1000_lmax128_n1000.npy')
     print('(Multi-)Processing gamma fit for synthetic GRB correlations...')

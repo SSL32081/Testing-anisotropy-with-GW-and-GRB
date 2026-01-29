@@ -18,7 +18,13 @@ DATA_DIR = Path("../data/")
 # Synthetic O4a skymap FITS files directory (replace as appropriate)
 PARENT_DIR = Path(os.environ.get('HANDON_REPO', './')) / 'LVK_skyloc_samples'
 GWTC4_FITS_DIR = PARENT_DIR / 'GWTC4p0_skymaps'
-SYN_O4A_FITS_DIR = PARENT_DIR / 'Synthetic_O4a_skymaps'
+GW_SYN_DATA_SET = 'O4a_SNR8_SFR'  # Options: O4a, O4a_SNR8, O4a_SNR8_SFR
+SYN_O4A_FITS_DIR = PARENT_DIR / f'Synthetic_{GW_SYN_DATA_SET}_skymaps'
+N_SIMS, KEY = {
+    'O4a': (1000, ''),
+    'O4a_SNR8': (2278, '_snr8'),
+    'O4a_SNR8_SFR': (1477, '_snr8_sfr'),
+}[GW_SYN_DATA_SET]
 
 SINGLE = 4.1  # inches, single column fig width
 DOUBLE = 8.3  # inches, double column fig width
