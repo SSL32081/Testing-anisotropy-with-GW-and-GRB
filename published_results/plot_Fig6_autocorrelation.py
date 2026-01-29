@@ -13,9 +13,9 @@ parser.add_argument('--ntheta', type=int, default=180,
                     help='Number of theta bins for correlation function computation.')
 parser.add_argument('--lmax', type=int, default=CF_LMAX,
                     help='Maximum multipole moment lmax for correlation function computation.')
-parser.add_argument('--nowindow', action='store_false',
+parser.add_argument('--nowindow', action='store_false', default=True,
                     help='Whether to apply a resolution-limited window function in the correlation function computation.')
-parser.add_argument('--gammafit', action='store_true',
+parser.add_argument('--gammafit', action='store_true', default=False,
                     help='Whether to use gamma fit results for plotting.')
 
 
