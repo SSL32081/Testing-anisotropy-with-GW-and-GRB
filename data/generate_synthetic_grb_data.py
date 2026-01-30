@@ -8,7 +8,7 @@ from scipy.stats import norm
 from multiprocessing import Pool
 
 import sys
-sys.path.append('../published_results/')
+sys.path.append('../publication/')
 from utils import DATA_DIR, NSIDE, CF_LMAX, read_grb_data, \
     compute_correlation_function, compute_skymap_from_points
 

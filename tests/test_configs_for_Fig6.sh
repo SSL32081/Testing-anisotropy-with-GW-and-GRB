@@ -4,7 +4,7 @@ source /cvmfs/software.igwn.org/conda/etc/profile.d/conda.sh
 conda activate gw-school-2025
 
 DATA_DIR='../data'
-PLOT_DIR='../published_results'
+PLOT_DIR='../publication'
 
 for nths in 180 500; do
     for lmax in 26 128; do

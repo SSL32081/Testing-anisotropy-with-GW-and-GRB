@@ -4,7 +4,7 @@ from scipy.stats import gamma
 from multiprocessing import Pool
 import argparse
 import sys
-sys.path.append('../published_results/')
+sys.path.append('../publication/')
 from utils import DATA_DIR, CF_LMAX, N_SIMS, KEY, compute_correlation_function
 
 parser = argparse.ArgumentParser(description='Options for computing the gamma fit of synthetic data.')

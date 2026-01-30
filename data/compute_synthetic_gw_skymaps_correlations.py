@@ -3,7 +3,7 @@ import numpy as np
 import healpy as hp
 from multiprocessing import Pool
 import sys
-sys.path.append('../published_results/')
+sys.path.append('../publication/')
 from utils import DATA_DIR, NSIDE, CF_LMAX, N_SIMS, KEY, \
     read_synthetic_gw_skymap, compute_correlation_function
 
