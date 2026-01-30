@@ -133,7 +133,7 @@ def main():
     # Use the same ell range for all plots
     ell_range = np.arange(1, CL_LMAX + 1)
 
-    fig, axes = plt.subplots(2, 1, figsize=(SINGLE, 4.2),
+    fig, axes = plt.subplots(2, 1, figsize=(SINGLE, 4.7),
                              sharex=True, sharey=True)
 
     plot_gw_correlation(
