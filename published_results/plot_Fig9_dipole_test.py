@@ -9,8 +9,6 @@ N_F = 68
 N_B = 104
 nsamp = 200_000
 
-print(np.__version__)
-
 
 def compute_beta_samples(lambda_range, forward_posterior, backward_posterior):
     # Sample lambda_F and lambda_B from their posteriors
@@ -70,7 +68,7 @@ def main():
     q_05, q_50, q_95 = np.percentile(beta_samp, [5, 50, 95])    # 5th percentile (lower bound)
 
     # Create figure with two subplots
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(DOUBLE, 3.1))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(DOUBLE, 2.7))
 
     # Left panel: Lambda posteriors
     ax1.plot(lambdas, post_I, color=color_iso,

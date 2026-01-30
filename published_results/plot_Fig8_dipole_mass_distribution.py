@@ -94,7 +94,7 @@ def plot_hist(samples, ax_dec, ax_ra, plot_err=False):
         pos_counts.append(pos_count / N_samples)
         neg_counts.append(neg_count / N_samples)
 
-    fig, ax = plt.subplots(figsize=(SINGLE, 3.1))
+    fig, ax = plt.subplots(figsize=(SINGLE, 2.8))
 
     pos_counts_stats = np.percentile(pos_counts, [5, 50, 95], axis=0)
     neg_counts_stats = np.percentile(neg_counts, [5, 50, 95], axis=0)
