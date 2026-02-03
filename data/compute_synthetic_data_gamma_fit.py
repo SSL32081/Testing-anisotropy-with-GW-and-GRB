@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import numpy as np
-from scipy.stats import gamma 
+from scipy.stats import gamma
 from multiprocessing import Pool
 import argparse
 import sys
@@ -10,9 +10,9 @@ from utils import DATA_DIR, CF_LMAX, N_SIMS, KEY, compute_correlation_function
 parser = argparse.ArgumentParser(description='Options for computing the gamma fit of synthetic data.')
 parser.add_argument('--ntheta', type=int, default=180,
                     help='Number of theta bins for correlation function computation.')
-parser.add_argument('--lmax', type=int, default=CF_LMAX, 
+parser.add_argument('--lmax', type=int, default=CF_LMAX,
                     help='Maximum multipole moment lmax for correlation function computation.')
-parser.add_argument('--nowindow', action='store_false', default=True, 
+parser.add_argument('--nowindow', action='store_true',
                     help='Whether to apply a resolution-limited window function in the correlation function computation.')
 
 
@@ -63,10 +63,12 @@ def main():
         recompute_correlation_function(
             gw_synth_data['multipole_spectrum'],
             gw_synth_data['angular_spectrum'],
-            lmax=LMAX, windowed=WINDOWED, nthetas=NTHETAS 
+            lmax=LMAX, windowed=WINDOWED, nthetas=NTHETAS
         )
     )
     np.savez(DATA_DIR / f'synthetic_gw{KEY}_correlation_CLCF_gamma_fit_{suffix}', **gw_gamma_fits)
+
+    quit()
 
     grb_synth_data = np.load(DATA_DIR / 'congregated_synthetic_grb_correlation_stats_1000_lmax128_n1000.npy')
     print('(Multi-)Processing gamma fit for synthetic GRB correlations...')
@@ -80,7 +82,7 @@ def main():
             recompute_correlation_function(
                 grb_synth_data[f'{grb_type}_multipole_spectrum'],
                 grb_synth_data[f'{grb_type}_angular_spectrum'],
-                lmax=LMAX, windowed=WINDOWED, nthetas=NTHETAS 
+                lmax=LMAX, windowed=WINDOWED, nthetas=NTHETAS
             )
         )
 

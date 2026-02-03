@@ -17,7 +17,7 @@ parser.add_argument('--ntheta', type=int, default=180,
                     help='Number of theta bins for correlation function computation.')
 parser.add_argument('--lmax', type=int, default=CF_LMAX,
                     help='Maximum multipole moment lmax for correlation function computation.')
-parser.add_argument('--nowindow', action='store_true', 
+parser.add_argument('--nowindow', action='store_true',
                     help='Whether to apply a resolution-limited window function in the correlation function computation.')
 parser.add_argument('--gammafit', action='store_true', default=False,
                     help='Whether to use gamma fit results for plotting.')
@@ -132,7 +132,7 @@ def zoom_axis(ax1, ax2, **kwargs):
     return c1, c2, bbox_patch1, bbox_patch2
 
 
-def plot_grb_correlation(grb_data, grb_synth_stats, thetas, 
+def plot_grb_correlation(grb_data, grb_synth_stats, thetas,
                          *axes):
     obs_grb_dict = {
         'full': grb_data,
@@ -262,17 +262,18 @@ def main():
     plot_gw_correlation(
         gw_skymap, gw_synth_fit['gw_CF_gamma_fit'], theta_degs, axes['gw']
     )
-    plot_grb_correlation(grb_data, grb_synth_fit, theta_degs, 
+    plot_grb_correlation(grb_data, grb_synth_fit, theta_degs,
                          axes['grb'], axes['zoom1'], axes['zoom2'])
     plot_glade_correlation(glade_data, theta_degs, axes['gal'])
-    
+
     for key in ('gw', 'grb', 'gal'):
         axes[key].set_xlim(0, 180)
 
     fig.get_layout_engine().set(w_pad=0.01, wspace=0)
-    
+
     if USE_GAMMA_FIT:
         suffix += '_gammafit'
+    suffix += KEY
     fig.savefig(FIG_DIR / f"Fig6_autocorrelations_{suffix}.pdf", dpi=DPI)
     return fig, axes
 

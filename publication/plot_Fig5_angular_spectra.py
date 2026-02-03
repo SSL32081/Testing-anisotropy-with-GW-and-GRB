@@ -3,7 +3,7 @@ import numpy as np
 import argparse
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
-from utils import CL_LMAX, DATA_DIR, KEY, FIG_DIR, SINGLE, DPI, \
+from utils import DATA_DIR, KEY, FIG_DIR, SINGLE, DPI, \
     NSIDE, CL_LMAX, CF_LMAX, \
     read_grb_data, compute_skymap_from_points
 import healpy as hp
@@ -142,7 +142,7 @@ def main():
     plot_grb_correlation(grb_data, grb_synth_fit, ell_range, axes[1])
     axes[1].set_xlim(0, CL_LMAX + 0.5)
 
-    suffix = ''
+    suffix = f'{KEY}'
     if USE_GAMMA_FIT:
         suffix += '_gammafit'
     fig.savefig(FIG_DIR / f"Fig5_power_spectrum{suffix}.pdf", dpi=DPI)
