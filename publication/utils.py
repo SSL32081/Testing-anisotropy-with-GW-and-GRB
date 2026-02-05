@@ -23,7 +23,7 @@ SYN_O4A_FITS_DIR = PARENT_DIR / f'Synthetic_{GW_SYN_DATA_SET}_skymaps'
 N_SIMS, KEY = {
     'O4a': (1000, ''),
     'O4a_SNR8': (2278, '_snr8'),
-    'O4a_SNR8_SFR': (1511, '_snr8_sfr'),
+    'O4a_SNR8_SFR': (7554, '_snr8_sfr'),
     'O4a_SNR8_SFR_FAILED': (1478, '_snr8_sfr_failed'),
 }[GW_SYN_DATA_SET]
 

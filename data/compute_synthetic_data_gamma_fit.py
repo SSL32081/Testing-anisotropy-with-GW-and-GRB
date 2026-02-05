@@ -68,8 +68,6 @@ def main():
     )
     np.savez(DATA_DIR / f'synthetic_gw{KEY}_correlation_CLCF_gamma_fit_{suffix}', **gw_gamma_fits)
 
-    quit()
-
     grb_synth_data = np.load(DATA_DIR / 'congregated_synthetic_grb_correlation_stats_1000_lmax128_n1000.npy')
     print('(Multi-)Processing gamma fit for synthetic GRB correlations...')
     grb_gamma_fits = {}
