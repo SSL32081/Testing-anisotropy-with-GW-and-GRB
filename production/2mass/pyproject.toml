@@ -7,6 +7,7 @@ requires-python = ">=3.13"
 dependencies = [
     "gra",
     "lalsuite>=7.26.4",
+    "ligo-skymap>=2.5.3",
     "matplotlib>=3.10.8",
     "numpy>=2.4.2",
     "scienceplots>=2.2.0",
