@@ -17,8 +17,6 @@ twompz_table = catalogs[0]
 
 print(f"Downloaded {len(twompz_table)} galaxies from 2MPZ.")
 
+twompz_table.write('twompz_catalog.csv', format='csv', overwrite=True)
 
-# Save
-filename = "2mass/2mpz_full.fits"
-twompz_table.write("2mpz_full.fits", format="fits", overwrite=True)
-print('Saved 2MPZ catalog to "2mpz_full.fits".')
+
