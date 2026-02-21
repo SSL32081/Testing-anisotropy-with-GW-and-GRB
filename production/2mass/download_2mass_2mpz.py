@@ -11,6 +11,14 @@ catalogs = v.get_catalogs('VII/275')
 # 3. Extract the primary table
 twompz_table = catalogs[0]
 
+## Masking (NOT WORKING ATM)
+#mask = twompz_table['Ksmag'] < 13.9
+#clean_sample = twompz_table[mask]
 
-print(f"Downloaded {len(clean_sample)} galaxies from 2MPZ.")
+print(f"Downloaded {len(twompz_table)} galaxies from 2MPZ.")
 
+
+# Save
+filename = "2mass/2mpz_full.fits"
+twompz_table.write("2mpz_full.fits", format="fits", overwrite=True)
+print('Saved 2MPZ catalog to "2mpz_full.fits".')
