@@ -19,9 +19,13 @@ figures/example_synthetic_2mass_data.pdf figures/actual_2mass_data.pdf figures/2
 	mv 2mass_angular_power_spectrum_comparison_all_synthetic.pdf ../figures/
 
 data: 2mass
-2mass: 2mass/2mass_galaxy_catalog_spec.csv
+2mass: 2mass/2mass_galaxy_catalog_spec.csv 2mass/twompz_catalog.csv
 2mass/2mass_galaxy_catalog_spec.csv:
 	uv run gra data get 2mass spectroscopic
+2mass/twompz_catalog.csv:
+	cd 2mass && \
+	uv run download_2mass_2mpz.py
+
 
 clean:
 	rm -f 2mass/2mass_galaxy_catalog_spec.csv
