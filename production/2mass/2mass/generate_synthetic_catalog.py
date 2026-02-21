@@ -13,7 +13,9 @@ data = np.genfromtxt(filename, delimiter=",", names=True)
 ra = np.deg2rad(data["RAJ2000"])
 dec = np.deg2rad(data["DEJ2000"])
 l, b = helperfunctions.convert_ra_dec_to_l_b(ra, dec)
-n_galaxies = len(ra)
+zone_of_avoidance = 20
+l, b = helperfunctions.mask_zone_of_avoidance(l, b, zone_of_avoidance=zone_of_avoidance)
+n_galaxies = len(l)
 
 # Now generate 1,000 realisations of n_galaxies synthetic galaxies distributed across the sky, with masking
 n_realisations = 1000
@@ -26,7 +28,7 @@ else:
     l_synthetic_all = np.zeros((n_realisations, n_galaxies))
     b_synthetic_all = np.zeros((n_realisations, n_galaxies))
     for i in range(n_realisations):
-        l_synthetic, b_synthetic = helperfunctions.generate_uniform_sphere_2mass(n_galaxies)
+        l_synthetic, b_synthetic = helperfunctions.generate_uniform_sphere_2mass(n_galaxies, zone_of_avoidance=zone_of_avoidance)
         l_synthetic_all[i] = l_synthetic
         b_synthetic_all[i] = b_synthetic
     np.savez("synthetic_2mass_catalog.npz", l_synthetic_all=l_synthetic_all, b_synthetic_all=b_synthetic_all) # Save
@@ -35,12 +37,18 @@ else:
 l_synthetic = l_synthetic_all[0]
 b_synthetic = b_synthetic_all[0]
 helperfunctions.plot_l_b(l_synthetic, b_synthetic)
+# Plot the zone of avoidance as a shaded region
+plt.axhspan(-np.deg2rad(zone_of_avoidance), np.deg2rad(zone_of_avoidance), color="gray", alpha=0.5)
+plt.annotate("Zone of Avoidance", xy=(0.5, 0.5), xycoords="axes fraction", ha="center", va="center", fontsize=12, color="red")
 plt.title("Example synthetic 2mass data")
 plt.savefig("example_synthetic_2mass_data.pdf", bbox_inches="tight")
 plt.close()
 
 # Plot the actual galaxies:
 helperfunctions.plot_l_b(l, b)
+# Plot the zone of avoidance as a shaded region
+plt.axhspan(-np.deg2rad(zone_of_avoidance), np.deg2rad(zone_of_avoidance), color="gray", alpha=0.5)
+plt.annotate("Zone of Avoidance", xy=(0.5, 0.5), xycoords="axes fraction", ha="center", va="center", fontsize=12, color="red")
 plt.title("Actual 2mass data")
 plt.savefig("actual_2mass_data.pdf", bbox_inches="tight")
 plt.close()
@@ -55,7 +63,8 @@ ell_synthetic, cl_synthetic = helperfunctions.get_angular_power_spectrum(l_synth
 fig, ax = helperfunctions.plot_angular_power_spectrum(ell_real, cl_real, ax=None, label="Actual 2MASS (Clustered)")
 _, _ = helperfunctions.plot_angular_power_spectrum(ell_synthetic, cl_synthetic, ax=ax, label="Synthetic (Uniform/Poisson)")
 plt.legend()
-plt.show()
+plt.savefig("2mass_angular_power_spectrum_comparison.pdf", bbox_inches="tight")
+plt.close()
 
 # Now get the spectra for all 1,000 realisations of the synthetic data, and plot them together
 if os.path.exists("synthetic_2mass_spectra.npz"):
@@ -70,6 +79,5 @@ else:
 fig, ax = helperfunctions.plot_angular_power_spectrum(ell_real, cl_real, ax=None, label="Actual 2MASS (Clustered)")
 fig, ax = helperfunctions.plot_angular_power_spectra(ell_synthetic, cl_all_synthetic, ax=ax)
 plt.legend()
-plt.show()
-
-
+plt.savefig("2mass_angular_power_spectrum_comparison_all_synthetic.pdf", bbox_inches="tight")
+plt.close()

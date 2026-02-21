@@ -47,15 +47,19 @@ def plot_l_b(l, b):
     ax.grid(True)
     return fig, ax
 
-def generate_uniform_sphere_2mass(n_points):
-    ''' Generate n_points uniformly distributed in galactic plane coordinate l,b
+def mask_zone_of_avoidance(l, b, zone_of_avoidance=10):
+    ''' Mask out points within zone_of_avoidance degrees of the galactic plane (|b| < zone_of_avoidance).
+    '''
+    mask = np.abs(b) >= np.radians(zone_of_avoidance)
+    return l[mask], b[mask]
+
+def generate_uniform_sphere_2mass(n_points, zone_of_avoidance=10):
+    ''' Generate n_points uniformly distributed in galactic plane coordinate l,b, but with a zone of avoidance around the galactic plane (|b| < zone_of_avoidance degrees).
     '''
     n_points_extra = int(n_points * 2)  # Generate more points to ensure we get enough after filtering
     l = np.random.uniform(0, 2*np.pi, n_points_extra)
     b = np.arcsin(np.random.uniform(-1, 1, n_points_extra))
-    b_mask = np.abs(b) >= np.radians(5)  # Keep points outside 5 degrees of the galactic plane
-    l = l[b_mask]
-    b = b[b_mask]
+    l, b = mask_zone_of_avoidance(l, b, zone_of_avoidance=zone_of_avoidance)
     # Pick the first n_points after filtering
     l = l[:n_points]
     b = b[:n_points]
@@ -76,9 +80,9 @@ def get_angular_power_spectrum(l, b, nside=128):
     # Create the map (count galaxies per pixel)
     hpx_map = np.bincount(pixel_indices, minlength=npix).astype(float)
     
-    ## Optional: Convert to overdensity delta = (n - <n>) / <n>
-    #mean_n = np.mean(hpx_map)
-    #hpx_map = (hpx_map - mean_n) / mean_n
+    # Optional: Convert to overdensity delta = (n - <n>) / <n>
+    mean_n = np.mean(hpx_map)
+    hpx_map = (hpx_map - mean_n) / mean_n
     
     # 3. Compute the angular power spectrum Cl
     cl = hp.anafast(hpx_map)
@@ -101,11 +105,12 @@ def plot_angular_power_spectrum(ell, cl, label=None, ax=None):
     '''
     if ax is None:
         fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(ell, ell * (ell + 1) * cl, label=label)
-    #ax.plot(ell, cl, label=label)
+    #ax.plot(ell, ell * (ell + 1) * cl, label=label)
+    ax.plot(ell, cl, label=label)
     ax.set_xlabel(r"$\ell$")
-    ax.set_ylabel(r"$\ell(\ell+1)C_\ell$")
-    ax.set_xscale("log")
+    #ax.set_ylabel(r"$\ell(\ell+1)C_\ell$")
+    ax.set_ylabel(r"$C_\ell$")
+    #ax.set_xscale("log")
     ax.set_yscale("log")
     ax.grid(True)
     fig = ax.get_figure()
@@ -116,16 +121,23 @@ def plot_angular_power_spectra(ell, cl_all, labels=None, ax=None):
     '''
     if ax is None:
         fig, ax = plt.subplots(figsize=(8, 5))
+    cl_median = np.median(cl_all, axis=0)
+    cl_1sigma = np.percentile(cl_all, [16, 84], axis=0)
+    cl_3sigma = np.percentile(cl_all, [2.5, 97.5], axis=0)
     y = ell * (ell + 1) * cl_all
     y_median = np.median(y, axis=0)
     y_1sigma = np.percentile(y, [16, 84], axis=0)
     y_3sigma = np.percentile(y, [2.5, 97.5], axis=0)
-    ax.plot(ell, y_median, label=labels[0] if labels else "Median")
-    ax.fill_between(ell, y_1sigma[0], y_1sigma[1], color="gray", alpha=0.5, label=labels[1] if labels else "1-sigma")
-    ax.fill_between(ell, y_3sigma[0], y_3sigma[1], color="lightgray", alpha=0.5, label=labels[2] if labels else "3-sigma")
+    #ax.plot(ell, y_median, label=labels[0] if labels else "Median")
+    #ax.fill_between(ell, y_1sigma[0], y_1sigma[1], color="gray", alpha=0.5, label=labels[1] if labels else "1-sigma")
+    #ax.fill_between(ell, y_3sigma[0], y_3sigma[1], color="lightgray", alpha=0.5, label=labels[2] if labels else "3-sigma")
+    ax.plot(ell, cl_median, label=labels[0] if labels else "Median")
+    ax.fill_between(ell, cl_1sigma[0], cl_1sigma[1], color="gray", alpha=0.5, label=labels[1] if labels else "1-sigma")
+    ax.fill_between(ell, cl_3sigma[0], cl_3sigma[1], color="lightgray", alpha=0.5, label=labels[2] if labels else "3-sigma")
     ax.set_xlabel(r"$\ell$")
-    ax.set_ylabel(r"$\ell(\ell+1)C_\ell$")
-    ax.set_xscale("log")
+    #ax.set_ylabel(r"$\ell(\ell+1)C_\ell$")
+    ax.set_ylabel(r"$C_\ell$")
+    #ax.set_xscale("log")
     ax.set_yscale("log")
     ax.grid(True)
     if labels:
