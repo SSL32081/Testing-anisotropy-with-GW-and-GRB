@@ -1,6 +1,7 @@
 import scienceplots
 import matplotlib.pyplot as plt
 import numpy as np
+import healpy as hp
 # Plotting
 from astropy.visualization import wcsaxes
 from astropy.wcs import WCS
@@ -31,10 +32,9 @@ def plot_ra_dec(ra, dec):
     ax.grid(True)
     return fig, ax
 
-def plot_l_b(ra, dec):
-    ''' Plot ra, dec in the galactic coordinate system (l, b) in a Mollweide projection. l is wrapped to [-pi, pi] for better visualization.
+def plot_l_b(l, b):
+    ''' Plot l,b in the galactic coordinate system (l, b) in a Mollweide projection. l is wrapped to [-pi, pi] for better visualization.
     '''
-    l, b = convert_ra_dec_to_l_b(ra, dec)
     fig  = plt.figure(figsize=(10, 5))
     ax = fig.add_subplot(111, projection='mollweide')
     # Wrap l and b for plotting
@@ -47,3 +47,88 @@ def plot_l_b(ra, dec):
     ax.grid(True)
     return fig, ax
 
+def generate_uniform_sphere_2mass(n_points):
+    ''' Generate n_points uniformly distributed in galactic plane coordinate l,b
+    '''
+    n_points_extra = int(n_points * 2)  # Generate more points to ensure we get enough after filtering
+    l = np.random.uniform(0, 2*np.pi, n_points_extra)
+    b = np.arcsin(np.random.uniform(-1, 1, n_points_extra))
+    b_mask = np.abs(b) >= np.radians(5)  # Keep points outside 5 degrees of the galactic plane
+    l = l[b_mask]
+    b = b[b_mask]
+    # Pick the first n_points after filtering
+    l = l[:n_points]
+    b = b[:n_points]
+    return l, b
+
+def get_angular_power_spectrum(l, b, nside=128):
+    ''' Compute the angular power spectrum Cl from galactic coordinates l and b.
+    '''
+    # 1. Convert Galactic coordinates to colatitude (theta) and longitude (phi)
+    # healpy uses theta [0, pi] and phi [0, 2pi]
+    theta = np.pi/2 - b  # Convert b to colatitude
+    phi = l  # l is already in the correct range for phi
+    
+    # 2. Project points onto a HEALPix map
+    npix = hp.nside2npix(nside)
+    pixel_indices = hp.ang2pix(nside, theta, phi)
+    
+    # Create the map (count galaxies per pixel)
+    hpx_map = np.bincount(pixel_indices, minlength=npix).astype(float)
+    
+    ## Optional: Convert to overdensity delta = (n - <n>) / <n>
+    #mean_n = np.mean(hpx_map)
+    #hpx_map = (hpx_map - mean_n) / mean_n
+    
+    # 3. Compute the angular power spectrum Cl
+    cl = hp.anafast(hpx_map)
+    ell = np.arange(len(cl))
+    return ell, cl
+
+def get_angular_power_spectra(l_all, b_all, nside=128):
+    ''' Compute the angular power spectra for multiple realizations of l and b.
+    l_all and b_all should be arrays of shape (n_realisations, n_galaxies).
+    '''
+    n_realisations = l_all.shape[0]
+    cl_all = []
+    for i in range(n_realisations):
+        ell, cl = get_angular_power_spectrum(l_all[i], b_all[i], nside=nside)
+        cl_all.append(cl)
+    return np.array(ell), np.array(cl_all)
+
+def plot_angular_power_spectrum(ell, cl, label=None, ax=None):
+    ''' Plot the angular power spectrum Cl as a function of multipole moment ell.
+    '''
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(10, 5))
+    ax.plot(ell, ell * (ell + 1) * cl, label=label)
+    #ax.plot(ell, cl, label=label)
+    ax.set_xlabel(r"$\ell$")
+    ax.set_ylabel(r"$\ell(\ell+1)C_\ell$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.grid(True)
+    fig = ax.get_figure()
+    return fig, ax
+
+def plot_angular_power_spectra(ell, cl_all, labels=None, ax=None):
+    ''' Plot median, 1-sigma, 3-sigma bands for multiple angular power spectra.
+    '''
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(8, 5))
+    y = ell * (ell + 1) * cl_all
+    y_median = np.median(y, axis=0)
+    y_1sigma = np.percentile(y, [16, 84], axis=0)
+    y_3sigma = np.percentile(y, [2.5, 97.5], axis=0)
+    ax.plot(ell, y_median, label=labels[0] if labels else "Median")
+    ax.fill_between(ell, y_1sigma[0], y_1sigma[1], color="gray", alpha=0.5, label=labels[1] if labels else "1-sigma")
+    ax.fill_between(ell, y_3sigma[0], y_3sigma[1], color="lightgray", alpha=0.5, label=labels[2] if labels else "3-sigma")
+    ax.set_xlabel(r"$\ell$")
+    ax.set_ylabel(r"$\ell(\ell+1)C_\ell$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.grid(True)
+    if labels:
+        ax.legend()
+    fig = ax.get_figure()
+    return fig, ax

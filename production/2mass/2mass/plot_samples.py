@@ -11,13 +11,14 @@ data = np.genfromtxt(filename, delimiter=",", names=True)
 # Convert to radians
 ra = np.deg2rad(data["RAJ2000"])
 dec = np.deg2rad(data["DEJ2000"])
+l, b = helperfunctions.convert_ra_dec_to_l_b(ra, dec)
 
 helperfunctions.plot_ra_dec(ra, dec)
 plt.title("2MASS Galaxy Catalog", fontsize=14)
 plt.savefig("2mass_galaxy_catalog_spec_ra_dec.pdf", bbox_inches="tight")
 plt.close()
 
-helperfunctions.plot_l_b(ra, dec)
+helperfunctions.plot_l_b(l,b)
 plt.title("2MASS Galaxy Catalog", fontsize=14)
 plt.savefig("2mass_galaxy_catalog_spec_l_b.pdf", bbox_inches="tight")
 plt.close()
