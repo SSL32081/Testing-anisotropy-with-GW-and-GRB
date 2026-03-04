@@ -21,7 +21,8 @@ parser.add_argument('--nowindow', action='store_true',
                     help='Whether to apply a resolution-limited window function in the correlation function computation.')
 parser.add_argument('--gammafit', action='store_true', default=False,
                     help='Whether to use gamma fit results for plotting.')
-
+parser.add_argument('--nogal', action='store_true', default=False,
+                    help='Whether to plot or not the autocorrelation function from the GLADE+ galaxy catalog.')
 
 DEG2RAD = np.pi / 180.0
 NPIX = hp.nside2npix(NSIDE)
@@ -31,6 +32,7 @@ LMAX = args.lmax
 NTHETAS = args.ntheta
 WINDOWED = not args.nowindow
 USE_GAMMA_FIT = args.gammafit
+PLOT_GLADE = not args.nogal
 mean_key = 'mean'
 std_key = 'std'
 if USE_GAMMA_FIT:
@@ -250,29 +252,47 @@ def main():
     # Use the same theta values for all plots
     theta_degs = np.linspace(0.0, 180.0, int(1e4))
 
-    fig = plt.figure(figsize=(SINGLE, 8))
-    axes = fig.subplot_mosaic([
-        ["gw", "gw"],
-        ["zoom1", "zoom2"],
-        ["grb", "grb"],
-        ["gal", "gal"],
-    ], height_ratios=[1, 0.55, 0.95, 1]
-    )
+    if PLOT_GLADE:
+        mosaic_list = [
+            ["gw", "gw"],
+            ["zoom1", "zoom2"],
+            ["grb", "grb"],
+            ["gal", "gal"],
+        ]
+        height_ratios_list = [1, 0.55, 0.95, 1]
+        key_list = ('gw', 'grb', 'gal')
+        plot_height = 8
+    else:
+        mosaic_list = [
+            ["gw", "gw"],
+            ["zoom1", "zoom2"],
+            ["grb", "grb"]
+            # ["gal", "gal"] <- absent if --nogal
+        ]
+        height_ratios_list = [1, 0.55, 0.95]  # <- three entries only if --nogal
+        key_list = ('gw', 'grb')              # <- no 'gal' if --nogal
+        plot_height = 8 / (1+0.55+0.95+1) * (1+0.55+0.95)
+
+    fig = plt.figure(figsize=(SINGLE, plot_height))
+    axes = fig.subplot_mosaic(mosaic_list, height_ratios=height_ratios_list)
 
     plot_gw_correlation(
         gw_skymap, gw_synth_fit['gw_CF_gamma_fit'], theta_degs, axes['gw']
     )
     plot_grb_correlation(grb_data, grb_synth_fit, theta_degs,
                          axes['grb'], axes['zoom1'], axes['zoom2'])
-    plot_glade_correlation(glade_data, theta_degs, axes['gal'])
+    if PLOT_GLADE:
+        plot_glade_correlation(glade_data, theta_degs, axes['gal'])
 
-    for key in ('gw', 'grb', 'gal'):
+    for key in key_list:
         axes[key].set_xlim(0, 180)
 
     fig.get_layout_engine().set(w_pad=0.01, wspace=0)
 
     if USE_GAMMA_FIT:
         suffix += '_gammafit'
+    if not PLOT_GLADE:
+        suffix += '_nogal'
     suffix += KEY
     fig.savefig(FIG_DIR / f"Fig6_autocorrelations_{suffix}.pdf", dpi=DPI)
     return fig, axes
