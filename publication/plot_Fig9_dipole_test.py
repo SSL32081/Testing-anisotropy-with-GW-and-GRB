@@ -77,9 +77,9 @@ def main():
     # Left panel: Lambda posteriors
     ax1.plot(lambdas, post_I, color=color_iso,
              label=r'$p(\lambda \mid N_{\rm F}, N_{\rm B})$')
-    ax1.plot(lambdas, post_A_F, color=color_F,
+    ax1.plot(lambdas, post_A_F, color=color_F, ls='--',
              label=r'$p(\lambda_{\rm F} \mid N_{\rm F})$')
-    ax1.plot(lambdas, post_A_B, color=color_B,
+    ax1.plot(lambdas, post_A_B, color=color_B, ls='--',
              label=r'$p(\lambda_{\rm B} \mid N_{\rm B})$')
 
     ax1.set_xlim(40, 150)
