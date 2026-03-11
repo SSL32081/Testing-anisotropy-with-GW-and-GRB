@@ -103,10 +103,10 @@ def plot_hist(samples, ax_dec, ax_ra, plot_err=False):
     neg_count = np.sum(neg_counts) / N_realisations
 
     ax.stairs(pos_counts_stats[1], bins, hatch='//', color=color_F,
-              label=fr'Forward hemisphere ($N^{{\rm F}}={pos_count:.2f}$)',
+              label=fr'Forward hemisphere ($N^{{\rm F}}={pos_count:.0f}$)',
               zorder=5)
     ax.stairs(neg_counts_stats[1], bins, ls='-', hatch='\\\\', color=color_B,
-              label=fr'Backward hemisphere ($N^{{\rm B}}={neg_count:.2f}$)')
+              label=fr'Backward hemisphere ($N^{{\rm B}}={neg_count:.0f}$)')
 
     ax.fill_between(
         centres, pos_counts_stats[0], pos_counts_stats[2],
@@ -129,7 +129,7 @@ def plot_hist(samples, ax_dec, ax_ra, plot_err=False):
     ax.set_xlim(0, 120)
 
     ax.set(xlabel=r'Source Frame Chirp Mass, ${\cal M}_{\rm c}^{\rm src}\,/\,M_{\odot}$',
-           ylabel='Effective Event Counts',
+           ylabel='Effective Event Counts, $N_i^k$',
            title=r'Dipole Axis (${\rm RA}=167.9^\circ, {\rm DEC}={-}6.9^\circ$)')
 
     return fig
