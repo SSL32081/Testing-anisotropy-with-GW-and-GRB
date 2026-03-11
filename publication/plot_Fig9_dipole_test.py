@@ -43,9 +43,13 @@ def compute_posteriors():
     integrand_A_F_vals = np.array(integrand_A_F_vals)
     integrand_A_B_vals = np.array(integrand_A_B_vals)
 
-    posterior_I_vals = integrand_I_vals / np.trapz(integrand_I_vals, lambda_range)
-    posterior_A_F_vals = integrand_A_F_vals / np.trapz(integrand_A_F_vals, lambda_range)
-    posterior_A_B_vals = integrand_A_B_vals / np.trapz(integrand_A_B_vals, lambda_range)
+    Z_I = np.trapz(integrand_I_vals, lambda_range)
+    Z_A_F = np.trapz(integrand_A_F_vals, lambda_range)
+    Z_A_B = np.trapz(integrand_A_B_vals, lambda_range)
+    print(f"The log10 Bayes' factor is: {np.log10(Z_I / Z_A_F / Z_A_B):.2f}")
+    posterior_I_vals = integrand_I_vals / Z_I
+    posterior_A_F_vals = integrand_A_F_vals / Z_A_F
+    posterior_A_B_vals = integrand_A_B_vals / Z_A_B
 
     return lambda_range, posterior_I_vals, posterior_A_F_vals, posterior_A_B_vals
 
