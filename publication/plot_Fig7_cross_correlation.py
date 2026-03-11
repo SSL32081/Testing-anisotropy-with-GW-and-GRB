@@ -38,7 +38,7 @@ def main():
         cross_cf = compute_correlation_function(
             cross_cl, theta_degs * np.pi / 180, CF_LMAX, windowed=True)
 
-        label = grb_type.capitalize() + ' GRB x GW'
+        label = grb_type.capitalize() + ' GRB × GW'
         ax.plot(theta_degs, cross_cf, c=colour, linestyle=linestyle)
         ax2.plot(theta_degs, cross_cf, c=colour, linestyle=linestyle, label=label)
         ax3.plot(theta_degs, cross_cf, c=colour, linestyle=linestyle, label=label)
