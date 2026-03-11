@@ -23,6 +23,7 @@ def main():
 
     fig, ax = plt.subplots(1, 1, figsize=(SINGLE, 3.1))
     ax2 = ax.inset_axes([15, 0.18e-12, 165, 1.3e-12], transform=ax.transData)
+    fig2, ax3 = plt.subplots(1, 1, figsize=(SINGLE, 3.1))
 
     for grb_type in ('all', 'short', 'long'):
         grb_dataset, colour, linestyle = obs_grb_dict[grb_type]
@@ -40,9 +41,9 @@ def main():
         label = grb_type.capitalize() + ' GRB x GW'
         ax.plot(theta_degs, cross_cf, c=colour, linestyle=linestyle)
         ax2.plot(theta_degs, cross_cf, c=colour, linestyle=linestyle, label=label)
+        ax3.plot(theta_degs, cross_cf, c=colour, linestyle=linestyle, label=label)
 
     ax.set_ylim(0, 1.69e-12)
-    ax2.set_xlim(-5, 185)
 
     indicator = ax.indicate_inset_zoom(ax2, edgecolor="grey")
     # Change the connecting lines
@@ -51,20 +52,25 @@ def main():
 
     # Ticks
     ax.set_xticks(30 * np.arange(7))
-    ax2.set_xticks(30 * np.arange(7))
-    ax2.minorticks_on()
-    ax2.tick_params(which='minor', direction='in', left=False)
-    ax2.legend()
+    for _ax in (ax2, ax3):
+        _ax.set_xlim(-5, 185)
+        _ax.set_xticks(30 * np.arange(7))
+        _ax.minorticks_on()
+        _ax.tick_params(which='minor', direction='in', left=False)
+        _ax.legend()
 
-    ax.set_xlabel(r'$\theta\,/\,{\rm deg}$')
-    ax.set_ylabel(r'$C_{{\rm GW}\times{\rm GRB}}(\theta)$')
-    ax.set_title('Angular cross-corelation between GW and GRB events')
+    # Labels
+    for _ax in (ax, ax3):
+        _ax.set_xlabel(r'$\theta\,/\,{\rm deg}$')
+        _ax.set_ylabel(r'$C_{{\rm GW}\times{\rm GRB}}(\theta)$')
+        _ax.set_title('Angular cross-corelation between GW and GRB events')
 
-    # Shift the sci. notation text to the left
-    exp = ax.yaxis.get_offset_text()
-    exp.set_x(-0.09)
+        # Shift the sci. notation text to the left
+        exp = _ax.yaxis.get_offset_text()
+        exp.set_x(-0.09)
 
     fig.savefig(FIG_DIR / 'Fig7_cross_correlation.pdf', dpi=DPI)
+    fig2.savefig(FIG_DIR / 'Fig7_cross_correlation_single.pdf', dpi=DPI)
     return fig
 
 
