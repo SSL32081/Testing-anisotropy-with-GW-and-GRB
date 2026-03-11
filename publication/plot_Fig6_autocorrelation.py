@@ -226,7 +226,6 @@ def plot_glade_correlation(glade_data, thetas, ax):
 
     ax.plot(thetas, C_theta_obs, 'C3', label='GLADE+ Galaxies')
 
-    ax.set_xlabel(r'Angular separation $\theta$ [degrees]')
     ax.set_ylabel(r'Autocorrelation function $C(\theta)$')
     ax.set_title('GLADE+ Galaxy Distribution')
     ax.grid(True, which='both', ls='--', lw=0.5)
@@ -283,6 +282,9 @@ def main():
                          axes['grb'], axes['zoom1'], axes['zoom2'])
     if PLOT_GLADE:
         plot_glade_correlation(glade_data, theta_degs, axes['gal'])
+        axes['gal'].set_xlabel(r'Angular separation $\theta$ [degrees]')
+    else:
+        axes['grb'].set_xlabel(r'Angular separation $\theta$ [degrees]')
 
     for key in key_list:
         axes[key].set_xlim(0, 180)
