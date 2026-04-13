@@ -71,7 +71,7 @@ def main():
 
     # Set title and colorbar in post, so as to use our default style
     axes = fig.axes
-    axes[0].set_title(rf'GWTC-4 GW Localization Skymap ($\ell \leq {CL_LMAX}$)')
+    axes[0].set_title(rf"Localization Skymap of the new GW events" "\n" rf"from GWTC-4.0 (O4a only) ($\ell \leq {CL_LMAX}$)")
     plot_colourbar(fig, axes[0], im0,
                    label=r'Rescaled Probability Density' + '\n' +
                            r'$M_\text{GW}\left(\chi, \phi\right)$')
