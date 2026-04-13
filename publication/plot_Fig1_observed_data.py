@@ -19,7 +19,8 @@ def plot_gw_skymap(skymaps, ax=plt.gca(), fig=plt.gcf()):
         skymaps, nest=False,
         xsize=2600, coord='G',
         cmap=cmap, badcolor='gray', bgcolor='white',
-        vmin=0, vmax=np.percentile(skymaps[skymaps > 0], 99)
+        # vmin=0, vmax=np.percentile(skymaps[skymaps > 0], 99)
+        vmin=0, vmax=5e-6,
     )
     hp.graticule(verbose=False, dpar=30, dmer=30)
     ax.set_title(f"Combined GW Skymaps ({N_events} events)")
