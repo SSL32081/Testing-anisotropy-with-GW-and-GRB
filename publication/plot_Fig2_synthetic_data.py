@@ -5,21 +5,30 @@ from utils import DATA_DIR, N_SIMS, KEY, FIG_DIR, SINGLE, DPI, add_healpy_mollwe
 from copy import deepcopy
 import healpy as hp
 from matplotlib.colors import LogNorm
+from matplotlib import ticker
 
 
 ## GW skyamps
-def plot_gw_skymap(skymaps, ax=plt.gca(), fig=plt.gcf()):
+def plot_gw_skymap(skymaps, ax=plt.gca(), fig=plt.gcf(), vmax=None, numticks=None):
     # Hardcode number of events here, since the read-in data has lost that info
     N_events = 85
     cmap = 'viridis'
+
+    if not vmax:
+        vmax = np.percentile(skymaps[skymaps > 0], 99)
+        numticks = None
 
     ax = add_healpy_mollweide_ax(fig, ax)
     ax.projmap(
         skymaps, nest=False,
         xsize=2600, coord='G',
         cmap=cmap, badcolor='gray', bgcolor='white',
+<<<<<<< HEAD
         # vmin=0, vmax=np.percentile(skymaps[skymaps > 0], 99)
         vmin=0, vmax=5e-6,
+=======
+        vmin=0, vmax=vmax
+>>>>>>> d992909 (Fix colorbar axes (vmax and numticks))
     )
     hp.graticule(dpar=30, dmer=30)
     ax.set_title(f"Synthetic GW Skymaps ({N_events} events)")
@@ -31,6 +40,8 @@ def plot_gw_skymap(skymaps, ax=plt.gca(), fig=plt.gcf()):
         orientation="vertical",
         label=r'Probability Density $M_{\rm GW}(\chi,\phi)$'
     )
+    cbar = ax.images[0].colorbar
+    cbar.ax.yaxis.set_major_locator(ticker.LinearLocator(numticks=numticks))
     return fig, ax
 
 
@@ -100,7 +111,7 @@ def main():
     fig, axes = plt.subplots(2, 1, figsize=(SINGLE, 4.3),
                              subplot_kw={'projection': 'mollweide'})
 
-    plot_gw_skymap(gw_syn_map, ax=axes[0], fig=fig)
+    plot_gw_skymap(gw_syn_map, ax=axes[0], fig=fig, vmax=5e-6, numticks=6)
     plot_grb_skymap(grb_syn_data, ax=axes[1], fig=fig)
 
     # Manual Axes Adjustment for the healpy axes
